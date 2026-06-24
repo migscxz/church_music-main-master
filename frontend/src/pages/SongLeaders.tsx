@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { Pencil, Trash2, Plus, X, Users, User } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface SongLeader {
     id: number;
@@ -65,10 +66,30 @@ const SongLeaders = () => {
     const openCreateModal = () => { setEditingLeader(null); setName(''); setIsModalOpen(true); };
 
     if (loadingLeaders) return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300, gap: 12 }}>
+            <motion.div 
+                animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 1.2, repeat: Infinity }}
+                style={{ width: 8, height: 8, borderRadius: '50%', background: '#c9a84c' }} 
+            />
             <span style={{ fontFamily: "'DM Sans', sans-serif", color: '#888', fontSize: 14 }}>Loading…</span>
         </div>
     );
+
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.05
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, scale: 0.95, y: 10 },
+        show: { opacity: 1, scale: 1, y: 0 }
+    };
 
     return (
         <>
@@ -233,11 +254,7 @@ const SongLeaders = () => {
                     backdrop-filter: blur(6px);
                     display: flex; align-items: center; justify-content: center;
                     padding: 24px; z-index: 50;
-                    animation: fadeIn 0.15s ease;
                 }
-
-                @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-                @keyframes slideUp { from { opacity: 0; transform: translateY(20px) } to { opacity: 1; transform: translateY(0) } }
 
                 .modal-card {
                     background: #fff;
@@ -245,7 +262,6 @@ const SongLeaders = () => {
                     width: 100%; max-width: 420px;
                     overflow: hidden;
                     box-shadow: 0 24px 64px rgba(0,0,0,0.22);
-                    animation: slideUp 0.2s ease;
                 }
 
                 .modal-header {
@@ -337,9 +353,14 @@ const SongLeaders = () => {
                         <p>Manage song leaders and their personalized song versions</p>
                     </div>
                     {isAdmin && (
-                        <button onClick={openCreateModal} className="btn-primary">
+                        <motion.button 
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={openCreateModal} 
+                            className="btn-primary"
+                        >
                             <Plus size={16} /> Add Leader
-                        </button>
+                        </motion.button>
                     )}
                 </div>
 
@@ -349,61 +370,98 @@ const SongLeaders = () => {
                     </span>
                 </div>
 
-                <div className="leaders-grid">
-                    {leaders.length === 0 ? (
-                        <div className="leaders-empty">
-                            <div className="empty-icon"><Users size={22} color="#c0bbb5" /></div>
-                            <h3>No leaders yet</h3>
-                            <p>Add a song leader to start creating personalized song versions.</p>
-                        </div>
-                    ) : leaders.map(leader => (
-                        <div key={leader.id} className="leader-card">
-                            <div className="leader-avatar">
-                                <User size={18} color="#c9a84c" />
-                            </div>
-                            <p className="leader-name">{leader.name}</p>
-                            {isAdmin && (
-                                <div className="leader-actions">
-                                    <button onClick={() => openEditModal(leader)} className="icon-btn icon-btn-edit" title="Edit">
-                                        <Pencil size={14} />
-                                    </button>
-                                    <button onClick={() => handleDelete(leader.id)} className="icon-btn icon-btn-delete" title="Delete">
-                                        <Trash2 size={14} />
-                                    </button>
+                <AnimatePresence mode="popLayout">
+                    <motion.div 
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="show"
+                        key="leaders-grid"
+                        className="leaders-grid"
+                    >
+                        {leaders.length === 0 ? (
+                            <motion.div 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="leaders-empty"
+                            >
+                                <div className="empty-icon"><Users size={22} color="#c0bbb5" /></div>
+                                <h3>No leaders yet</h3>
+                                <p>Add a song leader to start creating personalized song versions.</p>
+                            </motion.div>
+                        ) : leaders.map(leader => (
+                            <motion.div 
+                                key={leader.id} 
+                                variants={itemVariants}
+                                layout
+                                className="leader-card"
+                            >
+                                <div className="leader-avatar">
+                                    <User size={18} color="#c9a84c" />
                                 </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
+                                <p className="leader-name">{leader.name}</p>
+                                {isAdmin && (
+                                    <div className="leader-actions">
+                                        <motion.button 
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.9 }}
+                                            onClick={() => openEditModal(leader)} 
+                                            className="icon-btn icon-btn-edit" 
+                                            title="Edit"
+                                        >
+                                            <Pencil size={14} />
+                                        </motion.button>
+                                        <motion.button 
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.9 }}
+                                            onClick={() => handleDelete(leader.id)} 
+                                            className="icon-btn icon-btn-delete" 
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={14} />
+                                        </motion.button>
+                                    </div>
+                                )}
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                </AnimatePresence>
             </div>
 
-            {isModalOpen && (
-                <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setIsModalOpen(false); }}>
-                    <div className="modal-card">
-                        <div className="modal-header">
-                            <h2 className="modal-title">{editingLeader ? 'Edit Leader' : 'Add New Leader'}</h2>
-                            <button className="modal-close" onClick={() => setIsModalOpen(false)}><X size={16} /></button>
-                        </div>
-                        <form onSubmit={handleSubmit}>
-                            <div className="modal-body">
-                                <label htmlFor="name" className="form-label">Name</label>
-                                <input
-                                    type="text" id="name"
-                                    value={name}
-                                    onChange={e => setName(e.target.value)}
-                                    className="form-input"
-                                    placeholder="e.g. John Dela Cruz"
-                                    autoFocus required
-                                />
+            <AnimatePresence>
+                {isModalOpen && (
+                    <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setIsModalOpen(false); }}>
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="modal-card"
+                        >
+                            <div className="modal-header">
+                                <h2 className="modal-title">{editingLeader ? 'Edit Leader' : 'Add New Leader'}</h2>
+                                <button className="modal-close" onClick={() => setIsModalOpen(false)}><X size={16} /></button>
                             </div>
-                            <div className="modal-footer">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="btn-ghost">Cancel</button>
-                                <button type="submit" className="btn-submit">{editingLeader ? 'Save Changes' : 'Create Leader'}</button>
-                            </div>
-                        </form>
+                            <form onSubmit={handleSubmit}>
+                                <div className="modal-body">
+                                    <label htmlFor="name" className="form-label">Name</label>
+                                    <input
+                                        type="text" id="name"
+                                        value={name}
+                                        onChange={e => setName(e.target.value)}
+                                        className="form-input"
+                                        placeholder="e.g. John Dela Cruz"
+                                        autoFocus required
+                                    />
+                                </div>
+                                <div className="modal-footer">
+                                    <button type="button" onClick={() => setIsModalOpen(false)} className="btn-ghost">Cancel</button>
+                                    <button type="submit" className="btn-submit">{editingLeader ? 'Save Changes' : 'Create Leader'}</button>
+                                </div>
+                            </form>
+                        </motion.div>
                     </div>
-                </div>
-            )}
+                )}
+            </AnimatePresence>
         </>
     );
 };

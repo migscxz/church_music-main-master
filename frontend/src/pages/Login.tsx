@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { Music, Lock, Mail } from 'lucide-react';
+import { motion } from 'framer-motion';
+import Prism from '../components/ReactBits/Prism/Prism';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -39,19 +41,36 @@ const Login = () => {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    background: #f7f4f0;
+                    background: #050505;
                     padding: 20px;
                     font-family: 'DM Sans', sans-serif;
+                    position: relative;
+                    overflow: hidden;
+                }
+
+                .login-container::before {
+                    content: '';
+                    position: absolute;
+                    width: 140%;
+                    height: 140%;
+                    background: radial-gradient(circle, rgba(201,168,76,0.05) 0%, transparent 60%);
+                    top: -20%;
+                    left: -20%;
+                    pointer-events: none;
                 }
 
                 .login-card {
-                    background: #fff;
+                    background: rgba(15, 17, 23, 0.96);
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
                     width: 100%;
                     max-width: 420px;
-                    border-radius: 20px;
-                    box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+                    border-radius: 24px;
+                    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
                     overflow: hidden;
-                    border: 1px solid #ede9e4;
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    position: relative;
+                    z-index: 10;
                 }
 
                 .login-header {
@@ -99,6 +118,7 @@ const Login = () => {
 
                 .login-body {
                     padding: 32px;
+                    background: rgba(255, 255, 255, 0.02);
                 }
 
                 .error-banner {
@@ -141,12 +161,12 @@ const Login = () => {
                 .form-input {
                     width: 100%;
                     padding: 12px 14px 12px 42px;
-                    border: 1.5px solid #e8e4df;
-                    border-radius: 10px;
+                    border: 1.5px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 12px;
                     font-family: inherit;
                     font-size: 15px;
-                    color: #1a1814;
-                    background: #fff;
+                    color: #fff;
+                    background: rgba(255, 255, 255, 0.03);
                     outline: none;
                     transition: all 0.2s;
                 }
@@ -179,32 +199,57 @@ const Login = () => {
                     opacity: 0.7;
                     cursor: not-allowed;
                 }
-
-                .demo-credentials {
-                    margin-top: 24px;
-                    padding-top: 24px;
-                    border-top: 1px solid #f0ece8;
-                    font-size: 12.5px;
-                    color: #8a8680;
-                    text-align: center;
-                }
-
-                .demo-credentials p { margin: 4px 0; }
-                .demo-credentials strong { color: #5a5550; }
             `}</style>
 
             <div className="login-container">
-                <div className="login-card">
+                <div style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, zIndex: 1, opacity: 0.3 }}>
+                    <Prism
+                        animationType="3drotate"
+                        timeScale={0.2}
+                        height={4}
+                        baseWidth={6}
+                        scale={4}
+                        hueShift={0}
+                        colorFrequency={0.8}
+                        noise={0.1}
+                        glow={0.5}
+                    />
+                </div>
+
+                <motion.div 
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    className="login-card"
+                >
                     <div className="login-header">
-                        <div className="brand-icon">
+                        <motion.div 
+                            animate={{ 
+                                y: [0, -5, 0],
+                            }}
+                            transition={{ 
+                                duration: 3, 
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                            }}
+                            className="brand-icon"
+                        >
                             <Music size={32} color="#c9a84c" />
-                        </div>
-                        <h1 className="login-title">Sanctuary Music</h1>
+                        </motion.div>
+                        <h1 className="login-title">Worship & Music</h1>
                         <p className="login-subtitle">Sign in to manage the catalog</p>
                     </div>
 
                     <div className="login-body">
-                        {error && <div className="error-banner">{error}</div>}
+                        {error && (
+                            <motion.div 
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                className="error-banner"
+                            >
+                                {error}
+                            </motion.div>
+                        )}
 
                         <form onSubmit={handleSubmit}>
                             <div className="form-group">
@@ -237,14 +282,18 @@ const Login = () => {
                                 </div>
                             </div>
 
-                            <button type="submit" className="btn-submit" disabled={isLoading}>
+                            <motion.button 
+                                whileHover={{ scale: 1.01 }}
+                                whileTap={{ scale: 0.99 }}
+                                type="submit" 
+                                className="btn-submit" 
+                                disabled={isLoading}
+                            >
                                 {isLoading ? 'Signing in...' : 'Sign In'}
-                            </button>
+                            </motion.button>
                         </form>
-
-
                     </div>
-                </div>
+                </motion.div>
             </div>
         </>
     );

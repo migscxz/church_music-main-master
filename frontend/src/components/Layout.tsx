@@ -1,7 +1,8 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Music, Users, ListMusic, Home, Menu, Tag, ChevronRight, X, LogOut, Shield } from 'lucide-react';
+import { Music, Users, ListMusic, Home, Menu, Tag, ChevronRight, X, LogOut, Shield, Calendar } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Layout = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -12,6 +13,7 @@ const Layout = () => {
     const navigation = [
         { name: 'Dashboard', href: '/', icon: Home, description: 'Overview' },
         ...(user?.role === 'admin' ? [{ name: 'System Access', href: '/users', icon: Shield, description: 'User Admin' }] : []),
+        { name: 'Schedule', href: '/schedule', icon: Calendar, description: 'Line-ups' },
         { name: 'Songs', href: '/songs', icon: Music, description: 'Library' },
         { name: 'Song Leaders', href: '/leaders', icon: Users, description: 'Team' },
         { name: 'Setlists', href: '/setlists', icon: ListMusic, description: 'Planning' },
@@ -57,11 +59,8 @@ const Layout = () => {
                     position: relative;
                     z-index: 20;
                     border-right: 1px solid var(--sidebar-border);
-                    transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
                     overflow: hidden;
                 }
-
-                .sidebar.collapsed { width: var(--sidebar-collapsed); }
 
                 /* noise texture */
                 .sidebar::before {
@@ -94,6 +93,12 @@ const Layout = () => {
                     gap: 8px;
                     position: relative;
                     z-index: 1;
+                    transition: padding 0.3s;
+                }
+
+                .sidebar.collapsed .sidebar-header {
+                    justify-content: center;
+                    padding: 14px 0;
                 }
 
                 .sidebar-brand-row {
@@ -119,13 +124,9 @@ const Layout = () => {
 
                 .brand-text {
                     overflow: hidden;
-                    transition: opacity 0.18s ease;
-                    opacity: 1;
                     white-space: nowrap;
                     min-width: 0;
                 }
-
-                .sidebar.collapsed .brand-text { opacity: 0; pointer-events: none; }
 
                 .brand-title {
                     font-family: 'Cormorant Garamond', Georgia, serif;
@@ -180,7 +181,6 @@ const Layout = () => {
                 .ham span:nth-child(1) { width: 15px; }
                 .ham span:nth-child(2) { width: 10px; }
                 .ham span:nth-child(3) { width: 15px; }
-                .sidebar.collapsed .ham span:nth-child(2) { width: 15px; }
 
                 /* ── NAV SECTION LABEL ── */
                 .nav-section-label {
@@ -192,12 +192,9 @@ const Layout = () => {
                     padding: 18px 18px 8px;
                     white-space: nowrap;
                     overflow: hidden;
-                    transition: opacity 0.18s ease;
                     position: relative;
                     z-index: 1;
                 }
-
-                .sidebar.collapsed .nav-section-label { opacity: 0; pointer-events: none; }
 
                 /* ── NAV LINKS ── */
                 .nav-links {
@@ -207,6 +204,11 @@ const Layout = () => {
                     gap: 2px;
                     position: relative;
                     z-index: 1;
+                    transition: padding-top 0.3s;
+                }
+
+                .sidebar.collapsed .nav-links {
+                    padding-top: 12px;
                 }
 
                 .nav-link {
@@ -253,15 +255,7 @@ const Layout = () => {
                 .nav-link-text {
                     flex: 1;
                     overflow: hidden;
-                    transition: opacity 0.18s ease;
-                    opacity: 1;
                     min-width: 0;
-                }
-
-                .sidebar.collapsed .nav-link-text {
-                    opacity: 0;
-                    flex: 0;
-                    width: 0;
                 }
 
                 .nav-link-name {
@@ -283,7 +277,6 @@ const Layout = () => {
 
                 .nav-link:hover .chevron,
                 .nav-link.active .chevron { opacity: 0.5; transform: translateX(0); }
-                .sidebar.collapsed .nav-link .chevron { display: none; }
 
                 /* ── TOOLTIP ── */
                 .nav-tooltip {
@@ -315,8 +308,6 @@ const Layout = () => {
                     border-left: none;
                 }
 
-                .sidebar.collapsed .nav-link:hover .nav-tooltip { display: block; }
-
                 /* ── FOOTER ── */
                 .sidebar-footer {
                     margin-top: auto;
@@ -332,10 +323,7 @@ const Layout = () => {
                     color: var(--text-muted);
                     letter-spacing: 0.05em;
                     white-space: nowrap;
-                    transition: opacity 0.18s ease;
                 }
-
-                .sidebar.collapsed .sidebar-footer-text { opacity: 0; }
 
                 /* ── MOBILE HEADER ── */
                 .mobile-header {
@@ -373,7 +361,7 @@ const Layout = () => {
 
                 .mobile-menu-btn:hover { background: rgba(255,255,255,0.08); }
 
-                .mobile-sidebar { display: none; position: fixed; inset: 0; z-index: 40; }
+                .mobile-sidebar { position: fixed; inset: 0; z-index: 40; }
                 .mobile-sidebar-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
                 .mobile-sidebar-panel { position: absolute; top: 0; left: 0; bottom: 0; width: 280px; background: var(--sidebar-bg); border-right: 1px solid var(--sidebar-border); overflow-y: auto; }
 
@@ -409,7 +397,6 @@ const Layout = () => {
                     .layout-root { flex-direction: column; }
                     .sidebar { display: none; }
                     .mobile-header { display: flex; }
-                    .mobile-sidebar.open { display: block; }
                     .main-topbar { display: none; }
                     .main-content { padding: 20px 16px; }
                 }
@@ -429,49 +416,89 @@ const Layout = () => {
             </div>
 
             {/* Mobile Sidebar Overlay */}
-            {isMobileMenuOpen && (
-                <div className="mobile-sidebar open">
-                    <div className="mobile-sidebar-backdrop" onClick={() => setIsMobileMenuOpen(false)} />
-                    <div className="mobile-sidebar-panel">
-                        <MobileSidebarContents
-                            navigation={navigation}
-                            location={location}
-                            onLinkClick={() => setIsMobileMenuOpen(false)}
-                            onClose={() => setIsMobileMenuOpen(false)}
+            <AnimatePresence>
+                {isMobileMenuOpen && (
+                    <div className="mobile-sidebar">
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="mobile-sidebar-backdrop" 
+                            onClick={() => setIsMobileMenuOpen(false)} 
                         />
+                        <motion.div 
+                            initial={{ x: '-100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '-100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className="mobile-sidebar-panel"
+                        >
+                            <MobileSidebarContents
+                                navigation={navigation}
+                                location={location}
+                                onLinkClick={() => setIsMobileMenuOpen(false)}
+                                onClose={() => setIsMobileMenuOpen(false)}
+                            />
+                        </motion.div>
                     </div>
-                </div>
-            )}
+                )}
+            </AnimatePresence>
 
             <div className="layout-root">
                 {/* Desktop Sidebar */}
-                <aside className={`sidebar${isCollapsed ? ' collapsed' : ''}`}>
+                <motion.aside 
+                    animate={{ width: isCollapsed ? 'var(--sidebar-collapsed)' : 'var(--sidebar-expanded)' }}
+                    transition={{ duration: 0.3 }}
+                    className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}
+                >
 
                     {/* Header with hamburger toggle */}
                     <div className="sidebar-header">
-                        <div className="sidebar-brand-row">
-                            <div className="brand-icon-wrap">
-                                <Music size={18} color="#c9a84c" />
+                        {!isCollapsed && (
+                            <div className="sidebar-brand-row">
+                                <div className="brand-icon-wrap">
+                                    <Music size={18} color="#c9a84c" />
+                                </div>
+                                <AnimatePresence mode="wait">
+                                    <motion.div 
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -10 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="brand-text"
+                                    >
+                                        <p className="brand-title">Worship &amp; Music</p>
+                                        <p className="brand-subtitle">Ministry Suite</p>
+                                    </motion.div>
+                                </AnimatePresence>
                             </div>
-                            <div className="brand-text">
-                                <p className="brand-title">Worship &amp; Music</p>
-                                <p className="brand-subtitle">Ministry Suite</p>
-                            </div>
-                        </div>
+                        )}
                         <button
                             className="sidebar-toggle"
                             onClick={() => setIsCollapsed(c => !c)}
                             title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                         >
                             <div className="ham">
-                                <span />
-                                <span />
-                                <span />
+                                <motion.span animate={{ width: isCollapsed ? 15 : 15 }} />
+                                <motion.span animate={{ width: isCollapsed ? 15 : 10 }} />
+                                <motion.span animate={{ width: isCollapsed ? 15 : 15 }} />
                             </div>
                         </button>
                     </div>
 
-                    <p className="nav-section-label">Navigation</p>
+                    <AnimatePresence>
+                        {!isCollapsed && (
+                            <motion.p 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="nav-section-label"
+                            >
+                                Navigation
+                            </motion.p>
+                        )}
+                    </AnimatePresence>
+
                     <div className="nav-links">
                         {navigation.map((item) => {
                             const isActive = location.pathname === item.href;
@@ -485,12 +512,21 @@ const Layout = () => {
                                     <div className="nav-link-icon">
                                         <Icon size={16} color={isActive ? '#c9a84c' : 'rgba(240,237,232,0.5)'} />
                                     </div>
-                                    <div className="nav-link-text">
-                                        <span className="nav-link-name">{item.name}</span>
-                                        <span className="nav-link-desc">{item.description}</span>
-                                    </div>
-                                    <ChevronRight size={13} className="chevron" />
-                                    <span className="nav-tooltip">{item.name}</span>
+                                    <AnimatePresence mode="wait">
+                                        {!isCollapsed && (
+                                            <motion.div 
+                                                initial={{ opacity: 0, x: -10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: -10 }}
+                                                className="nav-link-text"
+                                            >
+                                                <span className="nav-link-name">{item.name}</span>
+                                                <span className="nav-link-desc">{item.description}</span>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                    {!isCollapsed && <ChevronRight size={13} className="chevron" />}
+                                    {isCollapsed && <span className="nav-tooltip">{item.name}</span>}
                                 </Link>
                             );
                         })}
@@ -498,15 +534,25 @@ const Layout = () => {
 
                     <div className="sidebar-footer">
                         <div style={{ paddingBottom: '14px', marginBottom: '14px', borderBottom: '1px solid var(--sidebar-border)' }}>
-                            <p className="sidebar-footer-text" style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '4px' }}>{user?.name}</p>
-                            <p className="sidebar-footer-text" style={{ fontSize: '10px', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>{user?.role}</p>
+                            <AnimatePresence>
+                                {!isCollapsed && (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                    >
+                                        <p className="sidebar-footer-text" style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '4px' }}>{user?.name}</p>
+                                        <p className="sidebar-footer-text" style={{ fontSize: '10px', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>{user?.role}</p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                         <button onClick={logout} className="sidebar-footer-text" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '8px', width: '100%', textAlign: 'left', outline: 'none' }}>
                             <LogOut size={13} style={{ opacity: 0.6 }} />
-                            <span>Sign out</span>
+                            {!isCollapsed && <span>Sign out</span>}
                         </button>
                     </div>
-                </aside>
+                </motion.aside>
 
                 {/* Main Area */}
                 <div className="main-area">
@@ -526,9 +572,15 @@ const Layout = () => {
                     </div>
 
                     <main className="main-content">
-                        <div className="content-inner">
+                        <motion.div 
+                            key={location.pathname}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4 }}
+                            className="content-inner"
+                        >
                             <Outlet />
-                        </div>
+                        </motion.div>
                     </main>
                 </div>
             </div>

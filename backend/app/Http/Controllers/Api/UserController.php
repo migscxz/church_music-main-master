@@ -17,10 +17,7 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        if ($request->user()->role !== 'admin') {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-        
+        // Removed admin check so any authenticated user can view the team member list for scheduling
         return User::orderBy('name')->get();
     }
 

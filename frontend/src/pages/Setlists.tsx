@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api';
 import { Pencil, Trash2, Plus, X, Calendar, ListMusic, Check, ChevronDown, ChevronRight, Youtube, HardDrive, ExternalLink } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface SongLeader { id: number; name: string; }
 interface Song { id: number; title: string; original_key?: string; }
@@ -102,7 +103,12 @@ const Setlists = () => {
     const formatDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
     if (loadingSetlists) return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300, gap: 12 }}>
+            <motion.div 
+                animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 1.2, repeat: Infinity }}
+                style={{ width: 8, height: 8, borderRadius: '50%', background: '#c9a84c' }} 
+            />
             <span style={{ fontFamily: "'DM Sans', sans-serif", color: '#888', fontSize: 14 }}>Loading setlists…</span>
         </div>
     );
@@ -111,6 +117,19 @@ const Setlists = () => {
     const filteredVersions = leaderFilter === 'All'
         ? availableVersions
         : availableVersions.filter(v => v.leader?.name === leaderFilter);
+
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: { staggerChildren: 0.05 }
+        }
+    };
+
+    const cardVariants = {
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0 }
+    };
 
     return (
         <>
@@ -322,18 +341,13 @@ const Setlists = () => {
                     background: rgba(15,17,23,0.72); backdrop-filter: blur(6px);
                     display: flex; align-items: center; justify-content: center;
                     padding: 24px; z-index: 50;
-                    animation: fadeIn 0.15s ease;
                 }
-
-                @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-                @keyframes slideUp { from { opacity: 0; transform: translateY(20px) } to { opacity: 1; transform: translateY(0) } }
 
                 .modal-card {
                     background: #fff; border-radius: 18px;
                     width: 100%; max-width: 640px; max-height: 90vh;
                     overflow: hidden; display: flex; flex-direction: column;
                     box-shadow: 0 24px 64px rgba(0,0,0,0.22);
-                    animation: slideUp 0.2s ease;
                 }
 
                 .modal-header {
@@ -471,9 +485,14 @@ const Setlists = () => {
                         <h1>Practice Setlists</h1>
                         <p>Group songs together for Sunday worship sessions</p>
                     </div>
-                    <button onClick={openCreateModal} className="btn-primary">
+                    <motion.button 
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={openCreateModal} 
+                        className="btn-primary"
+                    >
                         <Plus size={16} /> Create Setlist
-                    </button>
+                    </motion.button>
                 </div>
 
                 <div className="count-bar">
@@ -482,162 +501,215 @@ const Setlists = () => {
                     </span>
                 </div>
 
-                <div className="setlists-grid">
-                    {setlists.length === 0 ? (
-                        <div className="setlists-empty">
-                            <div className="empty-icon"><ListMusic size={22} color="#c0bbb5" /></div>
-                            <h3>No setlists yet</h3>
-                            <p>Create a setlist to organize songs for your next practice.</p>
-                        </div>
-                    ) : setlists.map(setlist => {
-                        const versions = (setlist as any).song_versions || (setlist as any).songVersions || [];
-                        return (
-                            <div key={setlist.id} className="setlist-card">
-                                <div className="card-header">
-                                    <div className="card-header-top">
-                                        <h3 className="card-title">{setlist.title}</h3>
-                                        <div className="card-header-actions">
-                                            <button onClick={() => openEditModal(setlist)} className="hdr-btn hdr-btn-edit" title="Edit"><Pencil size={13} /></button>
-                                            <button onClick={() => handleDelete(setlist.id)} className="hdr-btn hdr-btn-delete" title="Delete"><Trash2 size={13} /></button>
-                                        </div>
-                                    </div>
-                                    {setlist.date && (
-                                        <span className="card-date">
-                                            <Calendar size={11} /> {formatDate(setlist.date)}
-                                        </span>
-                                    )}
-                                </div>
-
-                                <div className="card-body">
-                                    <div className="songs-label">
-                                        Songs <span className="badge">{versions.length}</span>
-                                    </div>
-                                    {versions.length > 0 ? versions.map((v: any) => {
-                                        const isExpanded = expandedVersions[setlist.id] === v.id;
-                                        return (
-                                            <div key={v.id} className="version-item">
-                                                <div className="version-item-header" onClick={() => toggleExpand(setlist.id, v.id)}>
-                                                    <div className="version-dot">
-                                                        {isExpanded ? <ChevronDown size={14} color="#6a6560" /> : <ChevronRight size={14} color="#b0aba5" />}
-                                                    </div>
-                                                    <div style={{ flex: 1 }}>
-                                                        <div className="version-song">{v.leader?.name} <span style={{ fontWeight: 400, color: '#9a9590' }}>—</span> {v.song?.title}</div>
-                                                        <div className="version-meta">Key of {v.key} {v.tempo && `· ${v.tempo}`}</div>
-                                                    </div>
-                                                </div>
-                                                {isExpanded && (
-                                                    <div className="version-item-body">
-
-                                                        {/* Links */}
-                                                        {(v.youtube_link || v.drive_link || v.chord_reference) ? (
-                                                            <div className="vi-links">
-                                                                {v.youtube_link && (
-                                                                    <a href={v.youtube_link} target="_blank" rel="noopener noreferrer" className="vi-link-btn">
-                                                                        <Youtube size={13} color="#e52d27" /> YouTube
-                                                                    </a>
-                                                                )}
-                                                                {v.drive_link && (
-                                                                    <a href={v.drive_link} target="_blank" rel="noopener noreferrer" className="vi-link-btn">
-                                                                        <HardDrive size={13} color="#0F9D58" /> Google Drive
-                                                                    </a>
-                                                                )}
-                                                                {v.chord_reference && (
-                                                                    <a href={v.chord_reference} target="_blank" rel="noopener noreferrer" className="vi-link-btn">
-                                                                        <ExternalLink size={13} /> Chords
-                                                                    </a>
-                                                                )}
-                                                            </div>
-                                                        ) : (
-                                                            <p className="no-songs" style={{ margin: 0 }}>No reference links available.</p>
-                                                        )}
-                                                    </div>
-                                                )}
+                <AnimatePresence mode="popLayout">
+                    <motion.div 
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="show"
+                        className="setlists-grid"
+                    >
+                        {setlists.length === 0 ? (
+                            <motion.div 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="setlists-empty"
+                            >
+                                <div className="empty-icon"><ListMusic size={22} color="#c0bbb5" /></div>
+                                <h3>No setlists yet</h3>
+                                <p>Create a setlist to organize songs for your next practice.</p>
+                            </motion.div>
+                        ) : setlists.map(setlist => {
+                            const versions = (setlist as any).song_versions || (setlist as any).songVersions || [];
+                            return (
+                                <motion.div 
+                                    key={setlist.id} 
+                                    variants={cardVariants}
+                                    layout
+                                    className="setlist-card"
+                                >
+                                    <div className="card-header">
+                                        <div className="card-header-top">
+                                            <h3 className="card-title">{setlist.title}</h3>
+                                            <div className="card-header-actions">
+                                                <motion.button 
+                                                    whileHover={{ scale: 1.1 }}
+                                                    whileTap={{ scale: 0.9 }}
+                                                    onClick={() => openEditModal(setlist)} 
+                                                    className="hdr-btn hdr-btn-edit" 
+                                                    title="Edit"
+                                                >
+                                                    <Pencil size={13} />
+                                                </motion.button>
+                                                <motion.button 
+                                                    whileHover={{ scale: 1.1 }}
+                                                    whileTap={{ scale: 0.9 }}
+                                                    onClick={() => handleDelete(setlist.id)} 
+                                                    className="hdr-btn hdr-btn-delete" 
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={13} />
+                                                </motion.button>
                                             </div>
-                                        )
-                                    }) : (
-                                        <p className="no-songs">No songs added yet.</p>
-                                    )}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
+                                        </div>
+                                        {setlist.date && (
+                                            <span className="card-date">
+                                                <Calendar size={11} /> {formatDate(setlist.date)}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <div className="card-body">
+                                        <div className="songs-label">
+                                            Songs <span className="badge">{versions.length}</span>
+                                        </div>
+                                        {versions.length > 0 ? versions.map((v: any) => {
+                                            const isExpanded = expandedVersions[setlist.id] === v.id;
+                                            return (
+                                                <div key={v.id} className="version-item">
+                                                    <div className="version-item-header" onClick={() => toggleExpand(setlist.id, v.id)}>
+                                                        <motion.div 
+                                                            animate={{ rotate: isExpanded ? 90 : 0 }}
+                                                            className="version-dot"
+                                                        >
+                                                            <ChevronRight size={14} color={isExpanded ? "#6a6560" : "#b0aba5"} />
+                                                        </motion.div>
+                                                        <div style={{ flex: 1 }}>
+                                                            <div className="version-song">{v.leader?.name} <span style={{ fontWeight: 400, color: '#9a9590' }}>—</span> {v.song?.title}</div>
+                                                            <div className="version-meta">Key of {v.key} {v.tempo && `· ${v.tempo}`}</div>
+                                                        </div>
+                                                    </div>
+                                                    <AnimatePresence>
+                                                        {isExpanded && (
+                                                            <motion.div 
+                                                                initial={{ height: 0, opacity: 0 }}
+                                                                animate={{ height: 'auto', opacity: 1 }}
+                                                                exit={{ height: 0, opacity: 0 }}
+                                                                className="version-item-body"
+                                                            >
+                                                                {(v.youtube_link || v.drive_link || v.chord_reference) ? (
+                                                                    <div className="vi-links">
+                                                                        {v.youtube_link && (
+                                                                            <motion.a whileHover={{ y: -2 }} href={v.youtube_link} target="_blank" rel="noopener noreferrer" className="vi-link-btn">
+                                                                                <Youtube size={13} color="#e52d27" /> YouTube
+                                                                            </motion.a>
+                                                                        )}
+                                                                        {v.drive_link && (
+                                                                            <motion.a whileHover={{ y: -2 }} href={v.drive_link} target="_blank" rel="noopener noreferrer" className="vi-link-btn">
+                                                                                <HardDrive size={13} color="#0F9D58" /> Google Drive
+                                                                            </motion.a>
+                                                                        )}
+                                                                        {v.chord_reference && (
+                                                                            <motion.a whileHover={{ y: -2 }} href={v.chord_reference} target="_blank" rel="noopener noreferrer" className="vi-link-btn">
+                                                                                <ExternalLink size={13} /> Chords
+                                                                            </motion.a>
+                                                                        )}
+                                                                    </div>
+                                                                ) : (
+                                                                    <p className="no-songs" style={{ margin: 0 }}>No reference links available.</p>
+                                                                )}
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+                                                </div>
+                                            )
+                                        }) : (
+                                            <p className="no-songs">No songs added yet.</p>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
+                    </motion.div>
+                </AnimatePresence>
             </div>
 
-            {isModalOpen && (
-                <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setIsModalOpen(false); }}>
-                    <div className="modal-card">
-                        <div className="modal-header">
-                            <h2 className="modal-title">{editingSetlist ? 'Edit Setlist' : 'Create New Setlist'}</h2>
-                            <button className="modal-close" onClick={() => setIsModalOpen(false)}><X size={16} /></button>
-                        </div>
+            <AnimatePresence>
+                {isModalOpen && (
+                    <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setIsModalOpen(false); }}>
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="modal-card"
+                        >
+                            <div className="modal-header">
+                                <h2 className="modal-title">{editingSetlist ? 'Edit Setlist' : 'Create New Setlist'}</h2>
+                                <button className="modal-close" onClick={() => setIsModalOpen(false)}><X size={16} /></button>
+                            </div>
 
-                        <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
-                            <div className="modal-body">
-                                <div className="form-grid">
-                                    <div className="form-field">
-                                        <label className="form-label">Setlist Title <span className="req">*</span></label>
-                                        <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="form-input" placeholder="e.g. Sunday Worship AM" required />
-                                    </div>
-                                    <div className="form-field">
-                                        <label className="form-label">Date <span style={{ color: '#b0aba5', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
-                                        <input type="date" value={date} onChange={e => setDate(e.target.value)} className="form-input" />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '12px' }}>
-                                        <p className="songs-section-label" style={{ marginBottom: 0 }}>Select Song Versions</p>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <label style={{ fontSize: '12px', color: '#8a8680', fontWeight: 500 }}>Filter by Leader:</label>
-                                            <div className="relative">
-                                                <select
-                                                    value={leaderFilter}
-                                                    onChange={e => setLeaderFilter(e.target.value)}
-                                                    className="form-input"
-                                                    style={{ padding: '4px 28px 4px 10px', fontSize: '13px', minHeight: 'auto', appearance: 'none', background: '#f7f4f0', borderColor: '#e8e4df' }}
-                                                >
-                                                    <option value="All">All Leaders</option>
-                                                    {uniqueLeaders.map(name => (
-                                                        <option key={name} value={name}>{name}</option>
-                                                    ))}
-                                                </select>
-                                                <ChevronDown size={12} color="#8a8680" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-                                            </div>
+                            <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
+                                <div className="modal-body">
+                                    <div className="form-grid">
+                                        <div className="form-field">
+                                            <label className="form-label">Setlist Title <span className="req">*</span></label>
+                                            <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="form-input" placeholder="e.g. Sunday Worship AM" required />
+                                        </div>
+                                        <div className="form-field">
+                                            <label className="form-label">Date <span style={{ color: '#b0aba5', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
+                                            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="form-input" />
                                         </div>
                                     </div>
 
-                                    <div className="versions-list">
-                                        {filteredVersions.length === 0 ? (
-                                            <div className="no-versions-msg">
-                                                {leaderFilter === 'All' ? 'No song versions exist yet. Add songs and leader versions first.' : `No songs found for leader: ${leaderFilter}`}
-                                            </div>
-                                        ) : filteredVersions.map(v => {
-                                            const isSelected = selectedVersionIds.includes(v.id);
-                                            return (
-                                                <div key={v.id} className={`version-select-item ${isSelected ? 'selected' : ''}`} onClick={() => toggleVersion(v.id)}>
-                                                    <div className="check-box">
-                                                        {isSelected && <Check size={12} color="#c9a84c" strokeWidth={2.5} />}
-                                                    </div>
-                                                    <div>
-                                                        <div className="vs-song">{v.song?.title}</div>
-                                                        <div className="vs-meta">{v.leader?.name} · Key of {v.key}</div>
-                                                    </div>
+                                    <div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '12px' }}>
+                                            <p className="songs-section-label" style={{ marginBottom: 0 }}>Select Song Versions</p>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <label style={{ fontSize: '12px', color: '#8a8680', fontWeight: 500 }}>Filter by Leader:</label>
+                                                <div style={{ position: 'relative' }}>
+                                                    <select
+                                                        value={leaderFilter}
+                                                        onChange={e => setLeaderFilter(e.target.value)}
+                                                        className="form-input"
+                                                        style={{ padding: '4px 28px 4px 10px', fontSize: '13px', minHeight: 'auto', appearance: 'none', background: '#f7f4f0', borderColor: '#e8e4df' }}
+                                                    >
+                                                        <option value="All">All Leaders</option>
+                                                        {uniqueLeaders.map(name => (
+                                                            <option key={name} value={name}>{name}</option>
+                                                        ))}
+                                                    </select>
+                                                    <ChevronDown size={12} color="#8a8680" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                                                 </div>
-                                            );
-                                        })}
+                                            </div>
+                                        </div>
+
+                                        <div className="versions-list">
+                                            {filteredVersions.length === 0 ? (
+                                                <div className="no-versions-msg">
+                                                    {leaderFilter === 'All' ? 'No song versions exist yet. Add songs and leader versions first.' : `No songs found for leader: ${leaderFilter}`}
+                                                </div>
+                                            ) : filteredVersions.map(v => {
+                                                const isSelected = selectedVersionIds.includes(v.id);
+                                                return (
+                                                    <motion.div 
+                                                        whileHover={{ x: 4 }}
+                                                        key={v.id} 
+                                                        className={`version-select-item ${isSelected ? 'selected' : ''}`} 
+                                                        onClick={() => toggleVersion(v.id)}
+                                                    >
+                                                        <div className="check-box">
+                                                            {isSelected && <Check size={12} color="#c9a84c" strokeWidth={2.5} />}
+                                                        </div>
+                                                        <div>
+                                                            <div className="vs-song">{v.song?.title}</div>
+                                                            <div className="vs-meta">{v.leader?.name} · Key of {v.key}</div>
+                                                        </div>
+                                                    </motion.div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="modal-footer">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="btn-ghost">Cancel</button>
-                                <button type="submit" className="btn-submit">{editingSetlist ? 'Save Changes' : 'Create Setlist'}</button>
-                            </div>
-                        </form>
+                                <div className="modal-footer">
+                                    <button type="button" onClick={() => setIsModalOpen(false)} className="btn-ghost">Cancel</button>
+                                    <button type="submit" className="btn-submit">{editingSetlist ? 'Save Changes' : 'Create Setlist'}</button>
+                                </div>
+                            </form>
+                        </motion.div>
                     </div>
-                </div>
-            )}
+                )}
+            </AnimatePresence>
         </>
     );
 };

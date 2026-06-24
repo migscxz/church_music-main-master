@@ -3,10 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { Pencil, Plus, X, Tag as TagIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Tag { id: number; name: string; }
 
-// A small palette of warm/neutral accent tints for tag chips
 const TAG_TINTS = [
     { bg: 'rgba(201,168,76,0.10)', border: 'rgba(201,168,76,0.25)', color: '#8a6d2f' },
     { bg: 'rgba(100,140,110,0.10)', border: 'rgba(100,140,110,0.25)', color: '#3a6b4a' },
@@ -72,10 +72,28 @@ const Tags = () => {
     const openCreateModal = () => { setEditingTag(null); setName(''); setIsModalOpen(true); };
 
     if (loadingTags) return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300, gap: 12 }}>
+            <motion.div 
+                animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 1.2, repeat: Infinity }}
+                style={{ width: 8, height: 8, borderRadius: '50%', background: '#c9a84c' }} 
+            />
             <span style={{ fontFamily: "'DM Sans', sans-serif", color: '#888', fontSize: 14 }}>Loading categories…</span>
         </div>
     );
+
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: { staggerChildren: 0.03 }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, scale: 0.8 },
+        show: { opacity: 1, scale: 1 }
+    };
 
     return (
         <>
@@ -151,11 +169,6 @@ const Tags = () => {
                     position: relative;
                 }
 
-                .tag-chip:hover {
-                    transform: translateY(-1px);
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-                }
-
                 .tag-chip-icon {
                     width: 18px; height: 18px;
                     border-radius: 50%;
@@ -170,11 +183,8 @@ const Tags = () => {
                     display: flex;
                     gap: 2px;
                     margin-left: 4px;
-                    opacity: 0;
                     transition: opacity 0.15s;
                 }
-
-                .tag-chip:hover .tag-chip-actions { opacity: 1; }
 
                 .chip-btn {
                     width: 20px; height: 20px;
@@ -213,17 +223,12 @@ const Tags = () => {
                     background: rgba(15,17,23,0.72); backdrop-filter: blur(6px);
                     display: flex; align-items: center; justify-content: center;
                     padding: 24px; z-index: 50;
-                    animation: fadeIn 0.15s ease;
                 }
-
-                @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-                @keyframes slideUp { from { opacity: 0; transform: translateY(20px) } to { opacity: 1; transform: translateY(0) } }
 
                 .modal-card {
                     background: #fff; border-radius: 18px;
                     width: 100%; max-width: 400px; overflow: hidden;
                     box-shadow: 0 24px 64px rgba(0,0,0,0.22);
-                    animation: slideUp 0.2s ease;
                 }
 
                 .modal-header {
@@ -300,9 +305,14 @@ const Tags = () => {
                         <p>Group songs by topic, mood, or occasion (e.g., Healing, Salvation)</p>
                     </div>
                     {isAdmin && (
-                        <button onClick={openCreateModal} className="btn-primary">
+                        <motion.button 
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={openCreateModal} 
+                            className="btn-primary"
+                        >
                             <Plus size={16} /> Add Category
-                        </button>
+                        </motion.button>
                     )}
                 </div>
 
@@ -320,74 +330,95 @@ const Tags = () => {
                             <p>Add categories like "Healing", "Salvation", or "Upbeat" to organize your songs.</p>
                         </div>
                     ) : (
-                        <div className="tags-cloud">
-                            {tags.map(tag => {
-                                const tint = getTint(tag.id);
-                                return (
-                                    <div
-                                        key={tag.id}
-                                        className="tag-chip"
-                                        style={{ background: tint.bg, borderColor: tint.border, color: tint.color }}
-                                    >
-                                        <div className="tag-chip-icon">
-                                            <TagIcon size={10} color={tint.color} />
-                                        </div>
-                                        <span className="tag-chip-name">{tag.name}</span>
-                                        {isAdmin && (
-                                            <div className="tag-chip-actions">
-                                                <button
-                                                    className="chip-btn"
-                                                    onClick={() => openEditModal(tag)}
-                                                    title="Edit"
-                                                    style={{ color: tint.color }}
-                                                >
-                                                    <Pencil size={10} />
-                                                </button>
-                                                <button
-                                                    className="chip-btn"
-                                                    onClick={() => handleDelete(tag.id)}
-                                                    title="Delete"
-                                                    style={{ color: tint.color }}
-                                                >
-                                                    <X size={10} />
-                                                </button>
+                        <motion.div 
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="show"
+                            className="tags-cloud"
+                        >
+                            <AnimatePresence mode="popLayout">
+                                {tags.map(tag => {
+                                    const tint = getTint(tag.id);
+                                    return (
+                                        <motion.div
+                                            key={tag.id}
+                                            variants={itemVariants}
+                                            layout
+                                            className="tag-chip"
+                                            style={{ background: tint.bg, borderColor: tint.border, color: tint.color }}
+                                            whileHover={{ scale: 1.05, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                        >
+                                            <div className="tag-chip-icon">
+                                                <TagIcon size={10} color={tint.color} />
                                             </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
+                                            <span className="tag-chip-name">{tag.name}</span>
+                                            {isAdmin && (
+                                                <motion.div 
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    className="tag-chip-actions"
+                                                >
+                                                    <button
+                                                        className="chip-btn"
+                                                        onClick={() => openEditModal(tag)}
+                                                        title="Edit"
+                                                        style={{ color: tint.color }}
+                                                    >
+                                                        <Pencil size={10} />
+                                                    </button>
+                                                    <button
+                                                        className="chip-btn"
+                                                        onClick={() => handleDelete(tag.id)}
+                                                        title="Delete"
+                                                        style={{ color: tint.color }}
+                                                    >
+                                                        <X size={10} />
+                                                    </button>
+                                                </motion.div>
+                                            )}
+                                        </motion.div>
+                                    );
+                                })}
+                            </AnimatePresence>
+                        </motion.div>
                     )}
                 </div>
             </div>
 
-            {isModalOpen && (
-                <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setIsModalOpen(false); }}>
-                    <div className="modal-card">
-                        <div className="modal-header">
-                            <h2 className="modal-title">{editingTag ? 'Edit Category' : 'Add New Category'}</h2>
-                            <button className="modal-close" onClick={() => setIsModalOpen(false)}><X size={16} /></button>
-                        </div>
-                        <form onSubmit={handleSubmit}>
-                            <div className="modal-body">
-                                <label htmlFor="tagname" className="form-label">Category Name</label>
-                                <input
-                                    type="text" id="tagname"
-                                    value={name}
-                                    onChange={e => setName(e.target.value)}
-                                    className="form-input"
-                                    placeholder="e.g. Healing, Salvation, Upbeat"
-                                    autoFocus required
-                                />
+            <AnimatePresence>
+                {isModalOpen && (
+                    <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setIsModalOpen(false); }}>
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="modal-card"
+                        >
+                            <div className="modal-header">
+                                <h2 className="modal-title">{editingTag ? 'Edit Category' : 'Add New Category'}</h2>
+                                <button className="modal-close" onClick={() => setIsModalOpen(false)}><X size={16} /></button>
                             </div>
-                            <div className="modal-footer">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="btn-ghost">Cancel</button>
-                                <button type="submit" className="btn-submit">{editingTag ? 'Save Changes' : 'Create Category'}</button>
-                            </div>
-                        </form>
+                            <form onSubmit={handleSubmit}>
+                                <div className="modal-body">
+                                    <label htmlFor="tagname" className="form-label">Category Name</label>
+                                    <input
+                                        type="text" id="tagname"
+                                        value={name}
+                                        onChange={e => setName(e.target.value)}
+                                        className="form-input"
+                                        placeholder="e.g. Healing, Salvation, Upbeat"
+                                        autoFocus required
+                                    />
+                                </div>
+                                <div className="modal-footer">
+                                    <button type="button" onClick={() => setIsModalOpen(false)} className="btn-ghost">Cancel</button>
+                                    <button type="submit" className="btn-submit">{editingTag ? 'Save Changes' : 'Create Category'}</button>
+                                </div>
+                            </form>
+                        </motion.div>
                     </div>
-                </div>
-            )}
+                )}
+            </AnimatePresence>
         </>
     );
 };

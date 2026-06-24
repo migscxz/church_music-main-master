@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\SongVersionController;
 use App\Http\Controllers\Api\SetlistController;
 use App\Http\Controllers\Api\TagController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ScheduleController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -24,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('song-versions', SongVersionController::class)->except(['index', 'show']);
     Route::apiResource('setlists', SetlistController::class);
     Route::apiResource('tags', TagController::class)->except(['index', 'show']);
+    Route::apiResource('schedules', ScheduleController::class)->except(['index', 'show']);
 });
 
 // Public read access
@@ -35,3 +37,4 @@ Route::get('song-versions', [SongVersionController::class, 'index']);
 Route::get('song-versions/{song_version}', [SongVersionController::class, 'show']);
 Route::get('tags', [TagController::class, 'index']);
 Route::get('tags/{tag}', [TagController::class, 'show']);
+Route::get('schedules', [ScheduleController::class, 'index']);

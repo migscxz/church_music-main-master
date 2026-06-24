@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Music, Users, ListMusic, Tag, ArrowRight, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const Dashboard = () => {
     const cards = [
@@ -32,6 +33,21 @@ const Dashboard = () => {
             cta: 'Manage tags',
         },
     ];
+
+    const container = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const item = {
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+    };
 
     return (
         <>
@@ -262,42 +278,72 @@ const Dashboard = () => {
 
             <div className="dash">
                 {/* Hero */}
-                <div className="dash-hero">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.6 }}
+                    className="dash-hero"
+                >
                     <div className="hero-eyebrow">
                         <Music size={11} /> Worship &amp; Music Ministry
                     </div>
                     <h1 className="hero-title">Your ministry,<br />organized.</h1>
-                    <p className="hero-sub">Manage songs, leaders, setlists, and tags — all in one place for seamless Sunday worship.</p>
-                    <div className="hero-deco">♪</div>
-                </div>
+                    <p className="hero-sub">Manage songs, leaders, setlists, and tags all in one place for seamless Sunday worship.</p>
+                    <motion.div 
+                        animate={{ 
+                            y: [0, -10, 0],
+                            rotate: [0, 5, 0]
+                        }}
+                        transition={{ 
+                            duration: 4, 
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                        }}
+                        className="hero-deco"
+                    >
+                        ♪
+                    </motion.div>
+                </motion.div>
 
                 {/* Cards */}
                 <p className="section-label">Quick Access</p>
-                <div className="dash-grid">
+                <motion.div 
+                    variants={container}
+                    initial="hidden"
+                    animate="show"
+                    className="dash-grid"
+                >
                     {cards.map(({ href, icon: Icon, label, description, cta }) => (
-                        <Link key={href} to={href} className="dash-card">
-                            <div className="card-icon-row">
-                                <div className="card-icon">
-                                    <Icon size={20} color="#b0aba5" />
+                        <motion.div key={href} variants={item}>
+                            <Link to={href} className="dash-card">
+                                <div className="card-icon-row">
+                                    <div className="card-icon">
+                                        <Icon size={20} color="#b0aba5" />
+                                    </div>
+                                    <ArrowRight size={16} className="card-arrow" />
                                 </div>
-                                <ArrowRight size={16} className="card-arrow" />
-                            </div>
-                            <h2 className="card-label">{label}</h2>
-                            <p className="card-desc">{description}</p>
-                            <div className="card-cta">
-                                {cta} <ChevronRight size={13} />
-                            </div>
-                        </Link>
+                                <h2 className="card-label">{label}</h2>
+                                <p className="card-desc">{description}</p>
+                                <div className="card-cta">
+                                    {cta} <ChevronRight size={13} />
+                                </div>
+                            </Link>
+                        </motion.div>
                     ))}
-                </div>
+                </motion.div>
 
                 {/* Footer note */}
-                <div className="dash-footer-note">
+                <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 }}
+                    className="dash-footer-note"
+                >
                     <div className="footer-note-dot" />
                     <p className="footer-note-text">
                         <strong>Tip:</strong> Use Tags to categorize songs by mood or occasion, then filter the Songs Library to quickly find what you need for each service.
                     </p>
-                </div>
+                </motion.div>
             </div>
         </>
     );

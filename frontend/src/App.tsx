@@ -10,6 +10,7 @@ import SongDetails from './pages/SongDetails';
 import SongLeaders from './pages/SongLeaders';
 import Setlists from './pages/Setlists';
 import Tags from './pages/Tags';
+import Schedule from './pages/Schedule';
 
 import Users from './pages/Users';
 
@@ -44,6 +45,7 @@ function App() {
             <Route path="leaders" element={<SongLeaders />} />
             <Route path="setlists" element={<Setlists />} />
             <Route path="tags" element={<Tags />} />
+            <Route path="schedule" element={<Schedule />} />
           </Route>
         </Routes>
       </BrowserRouter>
