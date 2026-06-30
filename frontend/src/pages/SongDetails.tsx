@@ -248,13 +248,14 @@ const SongDetails = () => {
                 .modal-overlay { position: fixed; inset: 0; background: rgba(15,17,23,0.7); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 24px; }
                 .modal-card { background: var(--bg-card); border-radius: 18px; width: 100%; max-width: 680px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
                 .modal-header { padding: 20px 24px; border-bottom: 1px solid #f0ece8; display: flex; justify-content: space-between; align-items: center; }
+                .modal-title { margin: 0; font-size: 18px; font-weight: 700; color: #0f1117; }
                 .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
                 .modal-footer { padding: 16px 24px; border-top: 1px solid #f0ece8; background: var(--bg-card-alt); display: flex; justify-content: flex-end; gap: 10px; }
 
                 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
                 .form-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
                 .form-grid .form-field { margin-bottom: 0; }
-                .form-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+                .form-label { font-size: 11px; font-weight: 700; color: #6a6560; text-transform: uppercase; }
                 .form-input { border: 1.5px solid  var(--border-color); border-radius: 10px; padding: 10px 14px; outline: none; transition: border-color 0.2s; }
                 .form-input:focus { border-color: var(--accent); }
                 .btn-ghost { background: transparent; border: none; color: #6a6560; font-weight: 600; cursor: pointer; padding: 9px 18px; border-radius: 10px; transition: background 0.2s; }
