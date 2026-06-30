@@ -4,6 +4,7 @@ import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { ArrowLeft, User, Music2, Edit3, Trash2, Plus, X, Music, Youtube, HardDrive, ChevronDown } from 'lucide-react';
 import ChordViewer from '../components/ChordViewer';
+import { transposeText, getStepDifference } from '../utils/transposer';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SongLeader {
@@ -425,7 +426,21 @@ const SongDetails = () => {
                                         </div>
                                         <div className="form-field">
                                             <label className="form-label">Key</label>
-                                            <select value={key} onChange={e => setKey(e.target.value)} className="form-input">
+                                            <select 
+                                                value={key} 
+                                                onChange={e => {
+                                                    const newKey = e.target.value;
+                                                    if (key && newKey && chords) {
+                                                        const stepDiff = getStepDifference(key, newKey);
+                                                        if (stepDiff !== 0) {
+                                                            const transposed = transposeText(chords, stepDiff);
+                                                            setChords(transposed);
+                                                        }
+                                                    }
+                                                    setKey(newKey);
+                                                }} 
+                                                className="form-input"
+                                            >
                                                 {musicalKeys.map(k => <option key={k} value={k}>{k}</option>)}
                                             </select>
                                         </div>

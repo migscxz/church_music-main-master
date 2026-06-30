@@ -462,6 +462,15 @@ const Songs = () => {
                                             {musicalKeys.map(k => <option key={k} value={k}>{k}</option>)}
                                         </select>
                                     </div>
+                                    {user?.role === 'admin' && !editingSong && (
+                                        <div className="form-field">
+                                            <label className="form-label">Assign to Leader</label>
+                                            <select value={assignedOwnerId} onChange={e => setAssignedOwnerId(e.target.value)} className="form-input">
+                                                <option value="">Leave unassigned</option>
+                                                {leadersFilterData.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                                            </select>
+                                        </div>
+                                    )}
                                     <div className="form-field">
                                         <label className="form-label">Categories</label>
                                         <div className="cat-checkboxes">
