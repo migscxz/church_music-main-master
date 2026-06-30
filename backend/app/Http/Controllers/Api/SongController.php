@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Song;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SongController extends Controller
 {
@@ -16,7 +17,14 @@ class SongController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255|unique:songs,title',
+            'title' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('songs')->where(function ($query) use ($request) {
+                    return $query->where('original_artist', $request->original_artist);
+                })
+            ],
             'original_artist' => 'nullable|string|max:255',
             'original_key' => 'nullable|string|max:10',
             'tags' => 'nullable|array',
@@ -68,7 +76,14 @@ class SongController extends Controller
         }
 
         $validated = $request->validate([
-            'title' => 'required|string|max:255|unique:songs,title,' . $song->id,
+            'title' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('songs')->where(function ($query) use ($request) {
+                    return $query->where('original_artist', $request->original_artist);
+                })->ignore($song->id)
+            ],
             'original_artist' => 'nullable|string|max:255',
             'original_key' => 'nullable|string|max:10',
             'tags' => 'nullable|array',
