@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libpng-dev \
     libpq-dev \
+    libonig-dev \
     && docker-php-ext-install \
     pdo \
     pdo_pgsql \
@@ -20,7 +21,7 @@ RUN apt-get update && apt-get install -y \
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-COPY backend/ .
+COPY . .
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
