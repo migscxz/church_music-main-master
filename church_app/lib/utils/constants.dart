@@ -27,7 +27,7 @@ class AppColors {
 class ApiConstants {
   // Use 10.0.2.2 for Android Emulator connecting to localhost
   // Since you are using a physical device (TECNO LJ6), use your local IP:
-  static const String baseUrl = 'http://192.168.100.103:8000/api';
+  static const String baseUrl = 'http://192.168.100.254:8000/api';
 
   static const String login = '/login';
   static const String user = '/user'; // From sanctum

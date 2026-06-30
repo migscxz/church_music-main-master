@@ -70,7 +70,7 @@ const SongLeaders = () => {
             <motion.div 
                 animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 1.2, repeat: Infinity }}
-                style={{ width: 8, height: 8, borderRadius: '50%', background: '#c9a84c' }} 
+                style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)' }} 
             />
             <span style={{ fontFamily: "'DM Sans', sans-serif", color: '#888', fontSize: 14 }}>Loading…</span>
         </div>
@@ -127,8 +127,8 @@ const SongLeaders = () => {
                     display: inline-flex;
                     align-items: center;
                     gap: 7px;
-                    background: #0f1117;
-                    color: #f0ede8;
+                    background: var(--bg-surface);
+                    color: var(--text-primary);
                     border: none;
                     border-radius: 10px;
                     padding: 10px 18px;
@@ -160,7 +160,7 @@ const SongLeaders = () => {
                 }
 
                 .leader-card {
-                    background: #fff;
+                    background: var(--bg-card);
                     border-radius: 13px;
                     border: 1.5px solid #ede9e4;
                     padding: 20px;
@@ -179,7 +179,7 @@ const SongLeaders = () => {
                 .leader-avatar {
                     width: 46px; height: 46px;
                     border-radius: 50%;
-                    background: #0f1117;
+                    background: var(--bg-surface);
                     border: 2px solid rgba(201,168,76,0.2);
                     display: flex; align-items: center; justify-content: center;
                     flex-shrink: 0;
@@ -216,8 +216,8 @@ const SongLeaders = () => {
                 /* ── EMPTY ── */
                 .leaders-empty {
                     grid-column: 1 / -1;
-                    background: #faf8f5;
-                    border: 2px dashed #e8e4df;
+                    background: var(--bg-card-alt);
+                    border: 2px dashed  var(--border-color);
                     border-radius: 14px;
                     padding: 60px 24px;
                     text-align: center;
@@ -227,7 +227,7 @@ const SongLeaders = () => {
                     width: 56px; height: 56px;
                     border-radius: 14px;
                     background: #f2eeea;
-                    border: 1.5px solid #e8e4df;
+                    border: 1.5px solid  var(--border-color);
                     display: flex; align-items: center; justify-content: center;
                     margin: 0 auto 16px;
                 }
@@ -240,12 +240,12 @@ const SongLeaders = () => {
                     margin: 0 0 6px 0;
                 }
 
-                .leaders-empty p { font-size: 13.5px; color: #8a8680; margin: 0; }
+                .leaders-empty p { font-size: 13.5px; color: var(--text-muted); margin: 0; }
 
                 /* ── COUNT BAR ── */
                 .count-bar { margin-bottom: 14px; padding-left: 2px; }
                 .count-text { font-size: 12.5px; color: #9a9590; font-weight: 500; letter-spacing: 0.02em; }
-                .count-accent { color: #c9a84c; font-weight: 600; }
+                .count-accent { color: var(--accent); font-weight: 600; }
 
                 /* ── MODAL ── */
                 .modal-overlay {
@@ -257,7 +257,7 @@ const SongLeaders = () => {
                 }
 
                 .modal-card {
-                    background: #fff;
+                    background: var(--bg-card);
                     border-radius: 18px;
                     width: 100%; max-width: 420px;
                     overflow: hidden;
@@ -268,7 +268,7 @@ const SongLeaders = () => {
                     display: flex; justify-content: space-between; align-items: center;
                     padding: 20px 24px;
                     border-bottom: 1px solid #f0ece8;
-                    background: #faf8f5;
+                    background: var(--bg-card-alt);
                 }
 
                 .modal-title {
@@ -280,8 +280,8 @@ const SongLeaders = () => {
                 .modal-close {
                     width: 32px; height: 32px;
                     border-radius: 8px;
-                    border: 1.5px solid #e8e4df;
-                    background: #fff;
+                    border: 1.5px solid  var(--border-color);
+                    background: var(--bg-card);
                     cursor: pointer;
                     display: flex; align-items: center; justify-content: center;
                     color: #9a9590; transition: all 0.14s;
@@ -300,23 +300,23 @@ const SongLeaders = () => {
 
                 .form-input {
                     width: 100%;
-                    border: 1.5px solid #e8e4df;
+                    border: 1.5px solid  var(--border-color);
                     border-radius: 10px;
                     padding: 11px 14px;
                     font-family: 'DM Sans', sans-serif;
                     font-size: 14px; color: #1a1814;
-                    outline: none; background: #fff;
+                    outline: none; background: var(--bg-card);
                     transition: border-color 0.15s, box-shadow 0.15s;
                 }
 
-                .form-input:focus { border-color: #c9a84c; box-shadow: 0 0 0 3px rgba(201,168,76,0.12); }
+                .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--active-bg); }
                 .form-input::placeholder { color: #c0bbb5; }
 
                 .modal-footer {
                     display: flex; justify-content: flex-end; gap: 10px;
                     padding: 16px 24px;
                     border-top: 1px solid #f0ece8;
-                    background: #faf8f5;
+                    background: var(--bg-card-alt);
                 }
 
                 .btn-ghost {
@@ -331,7 +331,7 @@ const SongLeaders = () => {
                 .btn-submit {
                     padding: 9px 20px; border-radius: 10px;
                     font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 500;
-                    background: #0f1117; color: #f0ede8;
+                    background: var(--bg-surface); color: var(--text-primary);
                     border: none; cursor: pointer; transition: background 0.14s;
                     position: relative; overflow: hidden;
                 }
@@ -397,7 +397,7 @@ const SongLeaders = () => {
                                 className="leader-card"
                             >
                                 <div className="leader-avatar">
-                                    <User size={18} color="#c9a84c" />
+                                    <User size={18} color="var(--accent)" />
                                 </div>
                                 <p className="leader-name">{leader.name}</p>
                                 {isAdmin && (

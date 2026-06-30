@@ -68,13 +68,13 @@ const Login = () => {
                     border-radius: 24px;
                     box-shadow: 0 20px 50px rgba(0,0,0,0.5);
                     overflow: hidden;
-                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border: 1px solid var(--sidebar-border);
                     position: relative;
                     z-index: 10;
                 }
 
                 .login-header {
-                    background: #0f1117;
+                    background: var(--bg-surface);
                     padding: 40px 32px 30px;
                     text-align: center;
                     position: relative;
@@ -93,8 +93,8 @@ const Login = () => {
                 .brand-icon {
                     width: 64px;
                     height: 64px;
-                    background: rgba(201,168,76,0.15);
-                    border: 1px solid #c9a84c;
+                    background: var(--accent-muted);
+                    border: 1px solid var(--accent);
                     border-radius: 16px;
                     display: flex;
                     align-items: center;
@@ -172,15 +172,15 @@ const Login = () => {
                 }
 
                 .form-input:focus {
-                    border-color: #c9a84c;
-                    box-shadow: 0 0 0 3px rgba(201,168,76,0.12);
+                    border-color: var(--accent);
+                    box-shadow: 0 0 0 3px var(--active-bg);
                 }
 
                 .btn-submit {
                     width: 100%;
                     padding: 14px;
-                    background: #c9a84c;
-                    color: #0f1117;
+                    background: var(--accent);
+                    color: var(--text-primary);
                     border: none;
                     border-radius: 10px;
                     font-size: 15px;
@@ -234,7 +234,7 @@ const Login = () => {
                             }}
                             className="brand-icon"
                         >
-                            <Music size={32} color="#c9a84c" />
+                            <Music size={32} color="var(--accent)" />
                         </motion.div>
                         <h1 className="login-title">Worship & Music</h1>
                         <p className="login-subtitle">Sign in to manage the catalog</p>

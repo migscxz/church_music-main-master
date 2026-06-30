@@ -32,11 +32,16 @@ const Layout = () => {
                     --accent-muted: rgba(201,168,76,0.15);
                     --text-primary: #f0ede8;
                     --text-muted: rgba(240,237,232,0.45);
+                    --text-inverse: #0f1117;
                     --hover-bg: rgba(255,255,255,0.04);
                     --active-bg: rgba(201,168,76,0.12);
                     --main-bg: #f7f5f2;
                     --sidebar-expanded: 260px;
                     --sidebar-collapsed: 68px;
+                    --bg-surface: #0f1117;
+                    --bg-card: #fff;
+                    --bg-card-alt: #faf8f5;
+                    --border-color: #ede9e4;
                 }
 
                 * { box-sizing: border-box; }
@@ -366,7 +371,7 @@ const Layout = () => {
                 .mobile-sidebar-panel { position: absolute; top: 0; left: 0; bottom: 0; width: 280px; background: var(--sidebar-bg); border-right: 1px solid var(--sidebar-border); overflow-y: auto; }
 
                 /* ── MAIN ── */
-                .main-area { flex: 1; display: flex; flex-direction: column; min-height: 100vh; overflow: hidden; }
+                .main-area { flex: 1; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
 
                 .main-topbar {
                     background: #fff;
@@ -468,7 +473,7 @@ const Layout = () => {
                                         className="brand-text"
                                     >
                                         <p className="brand-title">Worship &amp; Music</p>
-                                        <p className="brand-subtitle">Ministry Suite</p>
+                                        <p className="brand-subtitle">WAM</p>
                                     </motion.div>
                                 </AnimatePresence>
                             </div>
@@ -510,7 +515,7 @@ const Layout = () => {
                                     className={`nav-link${isActive ? ' active' : ''}`}
                                 >
                                     <div className="nav-link-icon">
-                                        <Icon size={16} color={isActive ? '#c9a84c' : 'rgba(240,237,232,0.5)'} />
+                                        <Icon size={16} color={isActive ? '#c9a84c' : 'var(--text-muted)'} />
                                     </div>
                                     <AnimatePresence mode="wait">
                                         {!isCollapsed && (
@@ -620,7 +625,7 @@ const MobileSidebarContents = ({
                 width: 30px; height: 30px; border-radius: 7px;
                 background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
                 cursor: pointer; display: flex; align-items: center; justify-content: center;
-                color: rgba(240,237,232,0.5); transition: all 0.14s;
+                color: var(--text-muted); transition: all 0.14s;
             }
             .mob-close:hover { background: rgba(255,255,255,0.08); color: #f0ede8; }
             .mob-nav { padding: 12px 8px; display: flex; flex-direction: column; gap: 2px; }
@@ -656,7 +661,7 @@ const MobileSidebarContents = ({
                 return (
                     <Link key={item.name} to={item.href} className={`mob-nav-link${isActive ? ' active' : ''}`} onClick={onLinkClick}>
                         <div className="mob-icon">
-                            <Icon size={16} color={isActive ? '#c9a84c' : 'rgba(240,237,232,0.5)'} />
+                            <Icon size={16} color={isActive ? '#c9a84c' : 'var(--text-muted)'} />
                         </div>
                         <div>
                             <span className="mob-name">{item.name}</span>

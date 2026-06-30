@@ -17,7 +17,24 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(
+      path,
+      version: 2,
+      onCreate: _createDB,
+      onUpgrade: _upgradeDB,
+    );
+  }
+
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE schedules (
+          id INTEGER PRIMARY KEY,
+          month_year TEXT NOT NULL,
+          weeks_json TEXT
+        )
+      ''');
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -87,6 +104,14 @@ class DatabaseHelper {
         FOREIGN KEY (song_version_id) REFERENCES song_versions (id)
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE schedules (
+        id INTEGER PRIMARY KEY,
+        month_year TEXT NOT NULL,
+        weeks_json TEXT
+      )
+    ''');
   }
 
   Future<void> clearAll() async {
@@ -98,6 +123,7 @@ class DatabaseHelper {
     await db.delete('song_leaders');
     await db.delete('songs');
     await db.delete('setlists');
+    await db.delete('schedules');
   }
 
   // Batch insert methods
@@ -109,6 +135,19 @@ class DatabaseHelper {
         'id': item['id'],
         'title': item['title'],
         'date': item['date'],
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    await batch.commit(noResult: true);
+  }
+
+  Future<void> insertSchedules(List<Map<String, dynamic>> items) async {
+    final db = await instance.database;
+    final batch = db.batch();
+    for (var item in items) {
+      batch.insert('schedules', {
+        'id': item['id'],
+        'month_year': item['month_year'],
+        'weeks_json': item['weeks_json'],
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
     await batch.commit(noResult: true);
@@ -203,6 +242,11 @@ class DatabaseHelper {
     // We'll need to join with song_versions for the full UI
     final result = await db.query('setlists', orderBy: 'date DESC');
     return result;
+  }
+
+  Future<List<Map<String, dynamic>>> getSchedules() async {
+    final db = await instance.database;
+    return await db.query('schedules', orderBy: 'month_year DESC');
   }
 
   Future<List<Map<String, dynamic>>> getSetlistVersions(int setlistId) async {

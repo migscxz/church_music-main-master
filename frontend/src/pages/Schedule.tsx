@@ -185,7 +185,7 @@ const SchedulePage = () => {
             <motion.div 
                 animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 1.2, repeat: Infinity }}
-                style={{ width: 8, height: 8, borderRadius: '50%', background: '#c9a84c' }} 
+                style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)' }} 
             />
             <span style={{ fontFamily: "'DM Sans', sans-serif", color: '#888', fontSize: 14 }}>Loading schedules…</span>
         </div>
@@ -195,7 +195,7 @@ const SchedulePage = () => {
         <>
             <style>{`
                 .schedule-hero {
-                    background: #0f1117; border-radius: 16px; padding: 28px 32px;
+                    background: var(--bg-surface); border-radius: 16px; padding: 28px 32px;
                     display: flex; justify-content: space-between; align-items: center;
                     margin-bottom: 32px; position: relative; overflow: hidden; flex-wrap: wrap; gap: 20px;
                 }
@@ -205,25 +205,25 @@ const SchedulePage = () => {
                 }
                 .hero-icon {
                     width: 52px; height: 52px; border-radius: 12px;
-                    background: rgba(201,168,76,0.12); border: 1.5px solid rgba(201,168,76,0.25);
+                    background: var(--active-bg); border: 1.5px solid rgba(201,168,76,0.25);
                     display: flex; align-items: center; justify-content: center; margin-bottom: 14px;
                 }
                 .hero-title {
                     font-family: 'Cormorant Garamond', serif; font-size: 32px;
-                    font-weight: 700; color: #f0ede8; margin: 0 0 6px 0;
+                    font-weight: 700; color: #0f1117; margin: 0 0 6px 0;
                 }
                 .hero-sub {
-                    font-size: 13.5px; color: rgba(240,237,232,0.5); margin: 0;
+                    font-size: 13.5px; color: #8a8680; margin: 0;
                 }
                 .btn-add {
                     display: inline-flex; align-items: center; gap: 8px;
-                    background: rgba(201,168,76,0.15); border: 1.5px solid rgba(201,168,76,0.3);
-                    color: #c9a84c; border-radius: 10px; padding: 10px 20px;
+                    background: var(--accent-muted); border: 1.5px solid rgba(201,168,76,0.3);
+                    color: var(--accent); border-radius: 10px; padding: 10px 20px;
                     font-weight: 600; cursor: pointer; transition: all 0.15s;
                 }
                 
                 .schedule-table-container {
-                    background: #fff;
+                    background: var(--bg-card);
                     border-radius: 14px;
                     border: 1px solid #ede9e4;
                     box-shadow: 0 4px 12px rgba(0,0,0,0.03);
@@ -260,7 +260,7 @@ const SchedulePage = () => {
                 .role-cell {
                     font-weight: 600;
                     color: #6a6560;
-                    background: #faf8f5;
+                    background: var(--bg-card-alt);
                     white-space: nowrap;
                     text-transform: uppercase;
                     font-size: 11px;
@@ -301,20 +301,20 @@ const SchedulePage = () => {
 
                 /* Modals */
                 .modal-overlay { position: fixed; inset: 0; background: rgba(15,17,23,0.7); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 24px; }
-                .modal-card { background: #fff; border-radius: 18px; width: 100%; max-width: 1100px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
+                .modal-card { background: var(--bg-card); border-radius: 18px; width: 100%; max-width: 1100px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
                 .modal-header { padding: 20px 24px; border-bottom: 1px solid #f0ece8; display: flex; justify-content: space-between; align-items: center; }
-                .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 700; margin: 0; }
+                .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 700; margin: 0; color: #0f1117; }
                 .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
-                .modal-footer { padding: 16px 24px; border-top: 1px solid #f0ece8; background: #faf8f5; display: flex; justify-content: flex-end; gap: 10px; }
+                .modal-footer { padding: 16px 24px; border-top: 1px solid #f0ece8; background: var(--bg-card-alt); display: flex; justify-content: flex-end; gap: 10px; }
                 
                 .form-field { margin-bottom: 16px; }
-                .form-label { display: block; font-size: 11px; font-weight: 700; color: #8a8680; text-transform: uppercase; margin-bottom: 6px; }
-                .form-input { width: 100%; border: 1.5px solid #e8e4df; border-radius: 10px; padding: 10px 14px; outline: none; transition: border-color 0.2s; font-family: inherit; }
-                .form-input:focus { border-color: #c9a84c; }
+                .form-label { display: block; font-size: 11px; font-weight: 700; color: #5a5550; text-transform: uppercase; margin-bottom: 6px; }
+                .form-input { width: 100%; border: 1.5px solid  var(--border-color); border-radius: 10px; padding: 10px 14px; outline: none; transition: border-color 0.2s; font-family: inherit; }
+                .form-input:focus { border-color: var(--accent); }
                 
                 .btn-ghost { background: transparent; border: none; color: #6a6560; font-weight: 600; cursor: pointer; padding: 9px 18px; border-radius: 10px; transition: background 0.2s; }
                 .btn-ghost:hover { background: #f2eeea; }
-                .btn-submit { background: #0f1117; color: #f0ede8; border: none; font-weight: 600; cursor: pointer; padding: 9px 18px; border-radius: 10px; transition: background 0.2s; }
+                .btn-submit { background: var(--bg-surface); color: var(--text-primary); border: none; font-weight: 600; cursor: pointer; padding: 9px 18px; border-radius: 10px; transition: background 0.2s; }
                 .btn-submit:hover { background: #1a1a1a; }
                 
                 .edit-grid {
@@ -323,29 +323,29 @@ const SchedulePage = () => {
                     margin-top: 16px;
                 }
                 .edit-grid th, .edit-grid td {
-                    border: 1px solid #e8e4df;
+                    border: 1px solid  var(--border-color);
                     padding: 10px;
                 }
                 .edit-grid th {
-                    background: #faf8f5;
+                    background: var(--bg-card-alt);
                     font-size: 13px;
                     font-weight: 600;
                     text-align: center;
                 }
                 .edit-grid .role-col {
-                    background: #faf8f5;
+                    background: var(--bg-card-alt);
                     font-size: 11px;
                     font-weight: 600;
                     text-transform: uppercase;
-                    color: #8a8680;
+                    color: #6a6560;
                     width: 150px;
                 }
                 .edit-select {
                     width: 100%;
                     padding: 8px;
                     border-radius: 6px;
-                    border: 1px solid #e8e4df;
-                    background: #fff;
+                    border: 1px solid  var(--border-color);
+                    background: var(--bg-card);
                     font-family: inherit;
                     font-size: 13px;
                 }
@@ -358,7 +358,7 @@ const SchedulePage = () => {
             >
                 <div>
                     <div className="hero-icon">
-                        <Calendar size={24} color="#c9a84c" />
+                        <Calendar size={24} color="var(--accent)" />
                     </div>
                     <h1 className="hero-title">Ministry Schedule</h1>
                     <p className="hero-sub">Manage team line-ups for upcoming services, planned by month.</p>

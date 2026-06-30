@@ -32,6 +32,7 @@ const Songs = () => {
 
     const [title, setTitle] = useState('');
     const [originalArtist, setOriginalArtist] = useState('');
+    const [showArtistSuggestions, setShowArtistSuggestions] = useState(false);
     const [originalKey, setOriginalKey] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [leaderFilter, setLeaderFilter] = useState('');
@@ -59,6 +60,11 @@ const Songs = () => {
         queryKey: ['songs'],
         queryFn: () => api.get('/songs').then(res => res.data)
     });
+
+    const uniqueArtists = useMemo(() => {
+        const artists = new Set(songs.map(s => s.original_artist).filter(Boolean));
+        return Array.from(artists).sort() as string[];
+    }, [songs]);
 
     const { data: leadersFilterData = [] } = useQuery<any[]>({
         queryKey: ['song-leaders'],
@@ -92,7 +98,7 @@ const Songs = () => {
         onError: (error: any) => {
             console.error('Error saving song:', error);
             if (error.response?.status === 422 && error.response.data?.errors?.title) {
-                alert('This song title already exists in the catalog!');
+                alert('This exact song (Title + Artist) already exists in the catalog!');
             } else {
                 alert('An error occurred while saving the song.');
             }
@@ -177,7 +183,7 @@ const Songs = () => {
     const openCreateModal = () => { resetForm(); setIsModalOpen(true); };
 
     const myLeaderProfile = useMemo(() => {
-        if (!user || user.role !== 'leader') return null;
+        if (!user || user.role === 'member') return null;
         return leadersFilterData.find(l => l.name === user.name) || null;
     }, [user, leadersFilterData]);
 
@@ -201,7 +207,7 @@ const Songs = () => {
             setQuickAddDrive('');
             setQuickAddChordRef('');
         }
-        if (user?.role === 'leader' && myLeaderProfile) {
+        if (myLeaderProfile) {
             setQuickAddLeaderId(myLeaderProfile.id.toString());
         } else {
             setQuickAddLeaderId(leadersFilterData.length > 0 ? leadersFilterData[0].id.toString() : '');
@@ -341,7 +347,7 @@ const Songs = () => {
                                                     <h3 className="song-title">{song.title}</h3>
                                                     <p className="song-artist">{song.original_artist || 'Unknown Artist'}</p>
                                                     <div className="song-meta">
-                                                        <span className="meta-badge meta-badge-neutral">Key: {song.original_key || 'N/A'}</span>
+                                                        <span className="meta-badge meta-badge-neutral">Original Key: {song.original_key || 'N/A'}</span>
                                                         {song.tags?.map(t => <span key={t.id} className="meta-badge meta-badge-accent">{t.name}</span>)}
                                                     </div>
                                                 </div>
@@ -363,14 +369,16 @@ const Songs = () => {
                                                                 <Link to={`/songs/${song.id}`} className="btn-primary" style={{ padding: '6px 14px', fontSize: 12 }}>
                                                                     View Full Details
                                                                 </Link>
-                                                                <button 
-                                                                    onClick={() => openQuickAdd(song)}
-                                                                    className="btn-primary" 
-                                                                    style={{ background: 'rgba(201,168,76,0.1)', color: '#8a6d2f', padding: '6px 14px', fontSize: 12 }}
-                                                                >
-                                                                    <ArrowDownToLine size={14} style={{ marginRight: 6 }} />
-                                                                    Add to My List
-                                                                </button>
+                                                                {user?.role !== 'member' && (
+                                                                    <button 
+                                                                        onClick={() => openQuickAdd(song)}
+                                                                        className="btn-primary" 
+                                                                        style={{ background: 'rgba(201,168,76,0.1)', color: '#8a6d2f', padding: '6px 14px', fontSize: 12 }}
+                                                                    >
+                                                                        <ArrowDownToLine size={14} style={{ marginRight: 6 }} />
+                                                                        Add to My List
+                                                                    </button>
+                                                                )}
                                                                 <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
                                                                     {(user?.role === 'admin' || user?.id === song.user_id) && (
                                                                         <>
@@ -412,9 +420,47 @@ const Songs = () => {
                                         <label className="form-label">Song Title *</label>
                                         <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="form-input" required />
                                     </div>
-                                    <div className="form-field">
+                                    <div className="form-field" style={{ position: 'relative' }}>
                                         <label className="form-label">Artist</label>
-                                        <input type="text" value={originalArtist} onChange={e => setOriginalArtist(e.target.value)} className="form-input" />
+                                        <input 
+                                            type="text" 
+                                            value={originalArtist} 
+                                            onChange={e => {
+                                                setOriginalArtist(e.target.value);
+                                                setShowArtistSuggestions(true);
+                                            }}
+                                            onFocus={() => setShowArtistSuggestions(true)}
+                                            onBlur={() => setTimeout(() => setShowArtistSuggestions(false), 200)}
+                                            className="form-input" 
+                                            placeholder="Type or select an artist"
+                                            autoComplete="off"
+                                        />
+                                        {showArtistSuggestions && uniqueArtists.filter(a => a.toLowerCase().includes(originalArtist.toLowerCase())).length > 0 && (
+                                            <div className="absolute z-10 w-full bg-white mt-1 border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto" style={{ top: '100%' }}>
+                                                {uniqueArtists
+                                                    .filter(a => a.toLowerCase().includes(originalArtist.toLowerCase()))
+                                                    .map(artist => (
+                                                        <div 
+                                                            key={artist}
+                                                            className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700"
+                                                            onMouseDown={(e) => {
+                                                                e.preventDefault();
+                                                                setOriginalArtist(artist);
+                                                                setShowArtistSuggestions(false);
+                                                            }}
+                                                        >
+                                                            {artist}
+                                                        </div>
+                                                    ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="form-field">
+                                        <label className="form-label">Original Key</label>
+                                        <select value={originalKey} onChange={e => setOriginalKey(e.target.value)} className="form-input">
+                                            <option value="">Unknown</option>
+                                            {musicalKeys.map(k => <option key={k} value={k}>{k}</option>)}
+                                        </select>
                                     </div>
                                     <div className="form-field">
                                         <label className="form-label">Categories</label>
@@ -454,12 +500,16 @@ const Songs = () => {
                             <form onSubmit={handleQuickAddSubmit}>
                                 <div className="modal-body">
                                     <p style={{ fontSize: 13, color: '#8a8680', marginBottom: 16 }}>Adding <strong>{quickAddSong?.title}</strong> to your personal library.</p>
-                                    <div className="form-field">
-                                        <label className="form-label">Key *</label>
-                                        <select value={quickAddKey} onChange={e => setQuickAddKey(e.target.value)} className="form-input" required>
-                                            {musicalKeys.map(k => <option key={k} value={k}>{k}</option>)}
-                                        </select>
-                                    </div>
+                                    
+                                    {user?.role === 'admin' && (
+                                        <div className="form-field">
+                                            <label className="form-label">Assign to Leader *</label>
+                                            <select value={quickAddLeaderId} onChange={e => setQuickAddLeaderId(e.target.value)} className="form-input" required>
+                                                {leadersFilterData.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                                            </select>
+                                        </div>
+                                    )}
+
                                     <div className="form-field">
                                         <label className="form-label">Tempo</label>
                                         <input type="text" value={quickAddTempo} onChange={e => setQuickAddTempo(e.target.value)} className="form-input" />

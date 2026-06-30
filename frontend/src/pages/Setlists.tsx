@@ -107,7 +107,7 @@ const Setlists = () => {
             <motion.div 
                 animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 1.2, repeat: Infinity }}
-                style={{ width: 8, height: 8, borderRadius: '50%', background: '#c9a84c' }} 
+                style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)' }} 
             />
             <span style={{ fontFamily: "'DM Sans', sans-serif", color: '#888', fontSize: 14 }}>Loading setlists…</span>
         </div>
@@ -154,7 +154,7 @@ const Setlists = () => {
 
                 .btn-primary {
                     display: inline-flex; align-items: center; gap: 7px;
-                    background: #0f1117; color: #f0ede8;
+                    background: var(--bg-surface); color: var(--text-primary);
                     border: none; border-radius: 10px; padding: 10px 18px;
                     font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 500;
                     cursor: pointer; transition: background 0.15s, transform 0.1s;
@@ -172,7 +172,7 @@ const Setlists = () => {
                 /* count bar */
                 .count-bar { margin-bottom: 14px; padding-left: 2px; }
                 .count-text { font-size: 12.5px; color: #9a9590; font-weight: 500; }
-                .count-accent { color: #c9a84c; font-weight: 600; }
+                .count-accent { color: var(--accent); font-weight: 600; }
 
                 /* ── GRID ── */
                 .setlists-grid {
@@ -183,7 +183,7 @@ const Setlists = () => {
 
                 /* ── CARD ── */
                 .setlist-card {
-                    background: #fff;
+                    background: var(--bg-card);
                     border-radius: 14px;
                     border: 1.5px solid #ede9e4;
                     overflow: hidden;
@@ -198,7 +198,7 @@ const Setlists = () => {
                 }
 
                 .card-header {
-                    background: #0f1117;
+                    background: var(--bg-surface);
                     padding: 18px 18px 16px;
                     position: relative;
                     overflow: hidden;
@@ -218,7 +218,7 @@ const Setlists = () => {
                 .card-title {
                     font-family: 'Cormorant Garamond', serif;
                     font-size: 20px; font-weight: 700;
-                    color: #f0ede8; margin: 0 0 6px 0; line-height: 1.15;
+                    color: var(--text-primary); margin: 0 0 6px 0; line-height: 1.15;
                     flex: 1; padding-right: 8px;
                 }
 
@@ -227,12 +227,12 @@ const Setlists = () => {
                 .hdr-btn {
                     width: 28px; height: 28px;
                     border-radius: 7px; border: 1px solid rgba(255,255,255,0.1);
-                    background: rgba(255,255,255,0.06);
+                    background: var(--sidebar-border);
                     cursor: pointer; display: flex; align-items: center; justify-content: center;
-                    color: rgba(240,237,232,0.5); transition: all 0.14s;
+                    color: var(--text-muted); transition: all 0.14s;
                 }
 
-                .hdr-btn-edit:hover { background: rgba(201,168,76,0.18); border-color: rgba(201,168,76,0.3); color: #c9a84c; }
+                .hdr-btn-edit:hover { background: rgba(201,168,76,0.18); border-color: rgba(201,168,76,0.3); color: var(--accent); }
                 .hdr-btn-delete:hover { background: rgba(220,60,60,0.15); border-color: rgba(220,60,60,0.3); color: #f87171; }
 
                 .card-date {
@@ -252,7 +252,7 @@ const Setlists = () => {
 
                 .songs-label .badge {
                     background: #f2eeea;
-                    border: 1px solid #e8e4df;
+                    border: 1px solid  var(--border-color);
                     color: #7a7570;
                     font-size: 10px; padding: 1px 7px;
                     border-radius: 20px;
@@ -263,7 +263,7 @@ const Setlists = () => {
                     border-radius: 8px;
                     border: 1px solid #f0ece8;
                     margin-bottom: 7px;
-                    background: #faf8f5;
+                    background: var(--bg-card-alt);
                     transition: border-color 0.12s;
                     overflow: hidden;
                 }
@@ -291,7 +291,7 @@ const Setlists = () => {
                 
                 .version-item-body {
                     border-top: 1px solid #f0ece8;
-                    background: #fff;
+                    background: var(--bg-card);
                     padding: 14px;
                 }
                 
@@ -307,15 +307,15 @@ const Setlists = () => {
                     text-decoration: none; transition: all 0.14s;
                 }
                 
-                .vi-link-btn:hover { background: #fff; border-color: #c9a84c; color: #c9a84c; box-shadow: 0 2px 5px rgba(201,168,76,0.1); transform: translateY(-1px); }
+                .vi-link-btn:hover { background: var(--bg-card); border-color: var(--accent); color: var(--accent); box-shadow: 0 2px 5px rgba(201,168,76,0.1); transform: translateY(-1px); }
 
                 .no-songs { font-size: 13px; color: #c0bbb5; font-style: italic; }
 
                 /* ── EMPTY ── */
                 .setlists-empty {
                     grid-column: 1 / -1;
-                    background: #faf8f5;
-                    border: 2px dashed #e8e4df;
+                    background: var(--bg-card-alt);
+                    border: 2px dashed  var(--border-color);
                     border-radius: 14px;
                     padding: 60px 24px; text-align: center;
                 }
@@ -323,7 +323,7 @@ const Setlists = () => {
                 .empty-icon {
                     width: 56px; height: 56px;
                     border-radius: 14px;
-                    background: #f2eeea; border: 1.5px solid #e8e4df;
+                    background: #f2eeea; border: 1.5px solid  var(--border-color);
                     display: flex; align-items: center; justify-content: center;
                     margin: 0 auto 16px;
                 }
@@ -333,7 +333,7 @@ const Setlists = () => {
                     font-size: 22px; font-weight: 600; color: #1a1814; margin: 0 0 6px 0;
                 }
 
-                .setlists-empty p { font-size: 13.5px; color: #8a8680; margin: 0; }
+                .setlists-empty p { font-size: 13.5px; color: var(--text-muted); margin: 0; }
 
                 /* ── MODAL ── */
                 .modal-overlay {
@@ -344,7 +344,7 @@ const Setlists = () => {
                 }
 
                 .modal-card {
-                    background: #fff; border-radius: 18px;
+                    background: var(--bg-card); border-radius: 18px;
                     width: 100%; max-width: 640px; max-height: 90vh;
                     overflow: hidden; display: flex; flex-direction: column;
                     box-shadow: 0 24px 64px rgba(0,0,0,0.22);
@@ -352,7 +352,7 @@ const Setlists = () => {
 
                 .modal-header {
                     display: flex; justify-content: space-between; align-items: center;
-                    padding: 20px 24px; border-bottom: 1px solid #f0ece8; background: #faf8f5;
+                    padding: 20px 24px; border-bottom: 1px solid #f0ece8; background: var(--bg-card-alt);
                 }
 
                 .modal-title {
@@ -362,7 +362,7 @@ const Setlists = () => {
 
                 .modal-close {
                     width: 32px; height: 32px; border-radius: 8px;
-                    border: 1.5px solid #e8e4df; background: #fff;
+                    border: 1.5px solid  var(--border-color); background: var(--bg-card);
                     cursor: pointer; display: flex; align-items: center; justify-content: center;
                     color: #9a9590; transition: all 0.14s;
                 }
@@ -380,16 +380,16 @@ const Setlists = () => {
                     margin-bottom: 7px; letter-spacing: 0.06em; text-transform: uppercase;
                 }
 
-                .form-label .req { color: #c9a84c; }
+                .form-label .req { color: var(--accent); }
 
                 .form-input {
-                    border: 1.5px solid #e8e4df; border-radius: 10px;
+                    border: 1.5px solid  var(--border-color); border-radius: 10px;
                     padding: 10px 14px; font-family: 'DM Sans', sans-serif;
-                    font-size: 14px; color: #1a1814; outline: none; background: #fff;
+                    font-size: 14px; color: #1a1814; outline: none; background: var(--bg-card);
                     transition: border-color 0.15s, box-shadow 0.15s;
                 }
 
-                .form-input:focus { border-color: #c9a84c; box-shadow: 0 0 0 3px rgba(201,168,76,0.12); }
+                .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--active-bg); }
                 .form-input::placeholder { color: #c0bbb5; }
 
                 .songs-section-label {
@@ -415,7 +415,7 @@ const Setlists = () => {
                     border: 1.5px solid #ede9e4;
                     cursor: pointer;
                     transition: all 0.14s;
-                    background: #fff;
+                    background: var(--bg-card);
                 }
 
                 .version-select-item:hover { border-color: rgba(201,168,76,0.3); background: rgba(201,168,76,0.04); }
@@ -428,11 +428,11 @@ const Setlists = () => {
                     border: 1.5px solid #d8d3ce;
                     display: flex; align-items: center; justify-content: center;
                     flex-shrink: 0; transition: all 0.14s;
-                    background: #fff;
+                    background: var(--bg-card);
                 }
 
                 .version-select-item.selected .check-box {
-                    background: #0f1117; border-color: #0f1117;
+                    background: var(--bg-surface); border-color: var(--text-primary);
                 }
 
                 .vs-song { font-size: 13.5px; font-weight: 600; color: #1a1814; }
@@ -440,13 +440,13 @@ const Setlists = () => {
 
                 .no-versions-msg {
                     padding: 20px; text-align: center;
-                    border: 1.5px dashed #e8e4df; border-radius: 10px;
+                    border: 1.5px dashed  var(--border-color); border-radius: 10px;
                     font-size: 13px; color: #b0aba5; font-style: italic;
                 }
 
                 .modal-footer {
                     display: flex; justify-content: flex-end; gap: 10px;
-                    padding: 16px 24px; border-top: 1px solid #f0ece8; background: #faf8f5;
+                    padding: 16px 24px; border-top: 1px solid #f0ece8; background: var(--bg-card-alt);
                 }
 
                 .btn-ghost {
@@ -461,7 +461,7 @@ const Setlists = () => {
                 .btn-submit {
                     padding: 9px 20px; border-radius: 10px;
                     font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 500;
-                    background: #0f1117; color: #f0ede8; border: none; cursor: pointer;
+                    background: var(--bg-surface); color: var(--text-primary); border: none; cursor: pointer;
                     transition: background 0.14s; position: relative; overflow: hidden;
                 }
 
@@ -655,7 +655,7 @@ const Setlists = () => {
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '12px' }}>
                                             <p className="songs-section-label" style={{ marginBottom: 0 }}>Select Song Versions</p>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <label style={{ fontSize: '12px', color: '#8a8680', fontWeight: 500 }}>Filter by Leader:</label>
+                                                <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Filter by Leader:</label>
                                                 <div style={{ position: 'relative' }}>
                                                     <select
                                                         value={leaderFilter}
@@ -668,7 +668,7 @@ const Setlists = () => {
                                                             <option key={name} value={name}>{name}</option>
                                                         ))}
                                                     </select>
-                                                    <ChevronDown size={12} color="#8a8680" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                                                    <ChevronDown size={12} color="var(--text-muted)" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                                                 </div>
                                             </div>
                                         </div>
@@ -688,7 +688,7 @@ const Setlists = () => {
                                                         onClick={() => toggleVersion(v.id)}
                                                     >
                                                         <div className="check-box">
-                                                            {isSelected && <Check size={12} color="#c9a84c" strokeWidth={2.5} />}
+                                                            {isSelected && <Check size={12} color="var(--accent)" strokeWidth={2.5} />}
                                                         </div>
                                                         <div>
                                                             <div className="vs-song">{v.song?.title}</div>

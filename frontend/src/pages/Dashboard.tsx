@@ -59,7 +59,7 @@ const Dashboard = () => {
 
                 /* ── HERO ── */
                 .dash-hero {
-                    background: #0f1117;
+                    background: var(--bg-surface);
                     border-radius: 18px;
                     padding: 44px 40px;
                     margin-bottom: 36px;
@@ -93,7 +93,7 @@ const Dashboard = () => {
                     font-weight: 700;
                     letter-spacing: 0.14em;
                     text-transform: uppercase;
-                    color: #c9a84c;
+                    color: var(--accent);
                     margin-bottom: 16px;
                     background: rgba(201,168,76,0.1);
                     border: 1px solid rgba(201,168,76,0.22);
@@ -105,7 +105,7 @@ const Dashboard = () => {
                     font-family: 'Cormorant Garamond', Georgia, serif;
                     font-size: clamp(30px, 4vw, 44px);
                     font-weight: 700;
-                    color: #f0ede8;
+                    color: var(--text-inverse);
                     margin: 0 0 10px 0;
                     line-height: 1.08;
                     letter-spacing: -0.015em;
@@ -152,7 +152,7 @@ const Dashboard = () => {
                 }
 
                 .dash-card {
-                    background: #fff;
+                    background: var(--bg-card);
                     border-radius: 14px;
                     border: 1.5px solid #ede9e4;
                     padding: 24px;
@@ -206,14 +206,14 @@ const Dashboard = () => {
                     border-color: rgba(201,168,76,0.3);
                 }
 
-                .dash-card:hover .card-icon svg { color: #c9a84c !important; }
+                .dash-card:hover .card-icon svg { color: var(--accent) !important; }
 
                 .card-arrow {
                     color: #d8d3ce;
                     transition: color 0.18s, transform 0.18s;
                 }
 
-                .dash-card:hover .card-arrow { color: #c9a84c; transform: translate(3px, -3px); }
+                .dash-card:hover .card-arrow { color: var(--accent); transform: translate(3px, -3px); }
 
                 .card-label {
                     font-family: 'Cormorant Garamond', serif;
@@ -238,13 +238,13 @@ const Dashboard = () => {
                     gap: 5px;
                     font-size: 12.5px;
                     font-weight: 600;
-                    color: #c9a84c;
+                    color: var(--accent);
                     letter-spacing: 0.03em;
                 }
 
                 /* ── FOOTER NOTE ── */
                 .dash-footer-note {
-                    background: #faf8f5;
+                    background: var(--bg-card-alt);
                     border: 1.5px solid #ede9e4;
                     border-radius: 12px;
                     padding: 18px 22px;
@@ -256,7 +256,7 @@ const Dashboard = () => {
                 .footer-note-dot {
                     width: 8px; height: 8px;
                     border-radius: 50%;
-                    background: #c9a84c;
+                    background: var(--accent);
                     flex-shrink: 0;
                     box-shadow: 0 0 0 3px rgba(201,168,76,0.18);
                 }

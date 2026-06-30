@@ -8,9 +8,10 @@ interface ChordViewerProps {
     songTitle: string;
     leaderName: string;
     tempo?: string;
+    youtubeLink?: string | null;
 }
 
-const ChordViewer = ({ originalKey, chords, songTitle, leaderName, tempo }: ChordViewerProps) => {
+const ChordViewer = ({ originalKey, chords, songTitle, leaderName, tempo, youtubeLink }: ChordViewerProps) => {
     const [targetKey, setTargetKey] = useState(originalKey || 'C');
     const [layoutCols, setLayoutCols] = useState(1);
     const [fontSize, setFontSize] = useState(14);
@@ -37,7 +38,15 @@ const ChordViewer = ({ originalKey, chords, songTitle, leaderName, tempo }: Chor
 
     // Calculate step difference and transpose text
     const stepDiff = getStepDifference(originalKey || 'C', targetKey);
-    const transposedChords = transposeText(chords, stepDiff);
+    const transposedChordsRaw = transposeText(chords, stepDiff);
+    
+    // Auto-format: remove trailing spaces and replace 3+ consecutive newlines with 2 (1 blank line)
+    const transposedChords = transposedChordsRaw
+        .split('\n')
+        .map(line => line.trimEnd())
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
 
     // Auto-scroll logic for Practice Mode
     useEffect(() => {
@@ -112,18 +121,47 @@ const ChordViewer = ({ originalKey, chords, songTitle, leaderName, tempo }: Chor
     };
 
     const handleExportWord = () => {
+        const isLandscape = layoutCols === 3;
+        const fontSize = layoutCols === 3 ? '8.5pt' : (layoutCols === 2 ? '9.5pt' : '11pt');
+
         const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-        <head><meta charset='utf-8'><title>${songTitle}</title></head><body>`;
+        <head>
+            <meta charset='utf-8'>
+            <title>${songTitle}</title>
+            <style>
+                @page Section1 {
+                    size: ${isLandscape ? '11.0in 8.5in' : '8.5in 11.0in'};
+                    mso-page-orientation: ${isLandscape ? 'landscape' : 'portrait'};
+                    margin: 0.5in 0.5in 0.5in 0.5in;
+                }
+                div.Section1 { page: Section1; }
+            </style>
+        </head><body>`;
         const footer = "</body></html>";
 
+        let chordsHtml = '';
+        if (layoutCols > 1) {
+            const lines = transposedChords.split('\n');
+            const linesPerCol = Math.ceil(lines.length / layoutCols);
+            chordsHtml += '<table style="width: 100%; table-layout: fixed;" border="0" cellpadding="0" cellspacing="0"><tr>';
+            for (let i = 0; i < layoutCols; i++) {
+                const colLines = lines.slice(i * linesPerCol, (i + 1) * linesPerCol);
+                const colText = colLines.join('\n').replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br/>").replace(/ /g, "&nbsp;");
+                chordsHtml += `<td style="width: ${100 / layoutCols}%; vertical-align: top; padding-right: 10px; font-family: 'Courier New', Courier, monospace; font-size: ${fontSize}; line-height: 1.2; word-wrap: break-word;">${colText}</td>`;
+            }
+            chordsHtml += '</tr></table>';
+        } else {
+            chordsHtml = `<div style="font-family: 'Courier New', Courier, monospace; font-size: ${fontSize}; white-space: pre-wrap; line-height: 1.2;">
+${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br/>").replace(/ /g, "&nbsp;")}
+            </div>`;
+        }
+
         const content = `
-            <div style="font-family: Arial, sans-serif;">
+            <div class="Section1" style="font-family: Arial, sans-serif;">
                 <h1 style="font-size: 24pt; margin-bottom: 4pt;">${songTitle}</h1>
                 <p style="color: #666; font-size: 11pt; margin-top: 0;">Leader: <strong>${leaderName}</strong> &nbsp;|&nbsp; Key: <strong>${targetKey}</strong></p>
                 <hr style="border: 1px solid #ccc; margin-bottom: 16pt;" />
-                <div style="font-family: 'Courier New', Courier, monospace; font-size: 11pt; white-space: pre-wrap; line-height: 1.2;">
-${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br/>").replace(/ /g, "&nbsp;")}
-                </div>
+                ${chordsHtml}
             </div>
         `;
 
@@ -152,12 +190,21 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
         setFontSize(Math.max(9, optimumSize));
     };
 
-    // Prepare chords HTML: highlight brackets
+    // Prepare chords HTML: split by double newlines into stanzas to prevent page breaks inside stanzas when printing
     const parsedChordsHtml = transposedChords
-        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-        .replace(/\[(.*?)\]/g, '<span class="chord">[$1]</span>'); // Chord Highlighting
+        .split('\n\n')
+        .map(stanza => {
+            const htmlStanza = stanza
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/\[(.*?)\]/g, '<span class="chord">[$1]</span>'); // Chord Highlighting
+            return `<div class="stanza" style="break-inside: avoid; page-break-inside: avoid; margin-bottom: 1.5em;">${htmlStanza}</div>`;
+        })
+        .join('');
 
     if (isPracticeMode) {
+        const ytId = youtubeLink ? youtubeLink.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/) : null;
+        const videoId = (ytId && ytId[2].length === 11) ? ytId[2] : null;
+
         return (
             <div className="fixed inset-0 z-50 bg-[#111] text-gray-200 flex flex-col">
                 {/* Practice Mode Header Controls */}
@@ -175,7 +222,7 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
                     {/* Quick Transpose Controls */}
                     <div className="flex items-center space-x-1 bg-[#222] px-2 py-1 rounded-lg">
                         <button onClick={() => handleTranspose('down')} className="p-1.5 text-gray-400 hover:text-white rounded font-bold font-mono">-</button>
-                        <span className="text-sm w-8 text-center font-bold text-[#c9a84c]">{targetKey}</span>
+                        <span className="text-sm w-8 text-center font-bold text-[var(--accent)]">{targetKey}</span>
                         <button onClick={() => handleTranspose('up')} className="p-1.5 text-gray-400 hover:text-white rounded font-bold font-mono">+</button>
                     </div>
                     
@@ -188,7 +235,7 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
                         )}
                         <button 
                             onClick={() => setIsPlaying(!isPlaying)}
-                            className="bg-[#c9a84c] hover:bg-[#d4b55c] text-black p-2 rounded-full transition-colors shadow-sm"
+                            className="bg-[var(--accent)] hover:bg-[#d4b55c] text-black p-2 rounded-full transition-colors shadow-sm"
                         >
                             {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current pl-0.5" />}
                         </button>
@@ -199,7 +246,7 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
                                 min="1" max="10" 
                                 value={scrollSpeed} 
                                 onChange={(e) => setScrollSpeed(Number(e.target.value))}
-                                className="w-24 accent-[#c9a84c]"
+                                className="w-24 accent-[var(--accent)]"
                             />
                         </div>
                     </div>
@@ -227,7 +274,7 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
                 >
                     <pre
                         ref={contentRef}
-                        className="font-mono leading-relaxed whitespace-pre-wrap max-w-4xl mx-auto chord-content practice-theme"
+                        className="font-mono leading-tight whitespace-pre-wrap max-w-4xl mx-auto chord-content practice-theme"
                         style={{
                             fontSize: `${fontSize}px`,
                         }}
@@ -238,7 +285,7 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
 
                 <style>{`
                     .practice-theme .chord {
-                        color: #c9a84c;
+                        color: var(--accent);
                         font-weight: 700;
                     }
                     @keyframes pulse-metronome {
@@ -247,7 +294,7 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
                         100% { opacity: 0.3; transform: scale(1); }
                     }
                     .metronome-dot {
-                        width: 8px; height: 8px; border-radius: 50%; background: #c9a84c; opacity: 0.3;
+                        width: 8px; height: 8px; border-radius: 50%; background: var(--accent); opacity: 0.3;
                     }
                     .metronome-active {
                         animation-name: pulse-metronome;
@@ -255,6 +302,20 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
                         animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
                     }
                 `}</style>
+
+                {videoId && (
+                    <div className="fixed bottom-6 right-6 z-50 w-80 h-48 rounded-xl overflow-hidden shadow-2xl border border-gray-800 bg-black">
+                        <iframe 
+                            width="100%" 
+                            height="100%" 
+                            src={`https://www.youtube.com/embed/${videoId}?autoplay=0`} 
+                            title="YouTube video player" 
+                            frameBorder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowFullScreen
+                        ></iframe>
+                    </div>
+                )}
             </div>
         );
     }
@@ -335,7 +396,7 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
                             setFontSize(18); // Bump font size up for practice mode
                             setLayoutCols(1); // Force single column for scrolling
                         }}
-                        className="bg-[#111] hover:bg-black text-[#c9a84c] px-3 py-1.5 rounded-lg flex items-center space-x-2 text-sm transition-colors shadow-sm font-semibold"
+                        className="bg-[#111] hover:bg-black text-[var(--accent)] px-3 py-1.5 rounded-lg flex items-center space-x-2 text-sm transition-colors shadow-sm font-semibold"
                         title="Enter Practice Mode"
                     >
                         <Moon className="w-4 h-4" />
@@ -368,20 +429,20 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
                 </div>
             </div>
 
-            <div className="p-6 overflow-x-auto bg-[#fafafa] print:p-0 print:bg-white print:overflow-visible">
-                <div ref={printRef} className="print-container bg-white p-6 shadow-[0_0_15px_rgba(0,0,0,0.05)] mx-auto border border-gray-100 min-h-[500px] max-w-4xl print:shadow-none print:border-none print:p-0 print:max-w-none print:min-h-0">
+            <div className="p-8 overflow-x-auto bg-white border-t border-gray-100 print:p-0 print:overflow-visible">
+                <div ref={printRef} className="print-container mx-auto min-h-[500px] max-w-4xl print:max-w-none print:min-h-0">
 
                     {/* Header: visible in print & PDF */}
-                    <div className="mb-4 pb-3 border-b-2 border-gray-200 flex justify-between items-end print:mb-6">
+                    <div className="mb-8 flex justify-between items-start print:mb-6">
                         <div>
-                            <h1 className="text-2xl sm:text-3xl font-bold font-sans text-gray-900 m-0 leading-tight">{songTitle}</h1>
-                            <div className="text-sm text-gray-500 mt-1 flex gap-3">
-                                <span>Leader: <strong className="text-gray-700">{leaderName}</strong></span>
+                            <h1 className="text-3xl font-serif font-bold text-[var(--bg-surface)] m-0 leading-tight mb-2">{songTitle}</h1>
+                            <div className="text-[13.5px] text-[#6a6560] flex items-center gap-2">
+                                <span>Leader: <strong className="text-[var(--bg-surface)]">{leaderName}</strong></span>
                             </div>
                         </div>
                         <div className="text-right">
-                            <div className="text-lg font-bold text-gray-800 border border-gray-300 rounded px-3 py-1 bg-gray-50">
-                                Key: {targetKey}
+                            <div className="text-[13px] font-bold text-[#8a6d2f] bg-[rgba(201,168,76,0.1)] border border-[rgba(201,168,76,0.2)] rounded-full px-4 py-1.5">
+                                Key of {targetKey}
                             </div>
                         </div>
                     </div>
@@ -389,10 +450,11 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
                     {/* The rendered chords */}
                     <pre
                         ref={contentRef}
-                        className="font-mono leading-snug text-gray-900 whitespace-pre-wrap chord-content light-theme"
+                        className="leading-tight text-[#1a1814] whitespace-pre-wrap chord-content light-theme"
                         style={{
+                            fontFamily: "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace",
                             columnCount: layoutCols,
-                            columnGap: '3rem',
+                            columnGap: '4rem',
                             fontSize: `${fontSize}px`,
                         }}
                     >

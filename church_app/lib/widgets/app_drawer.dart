@@ -5,6 +5,7 @@ import '../models/models.dart';
 import '../utils/constants.dart';
 import '../screens/songs_database_screen.dart';
 import '../screens/create_setlist_screen.dart';
+import '../screens/schedule_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   final List<Setlist> setlists;
@@ -68,63 +69,22 @@ class AppDrawer extends StatelessWidget {
             },
           ),
           Divider(color: AppColors.borderLight),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
-            ),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'YOUR SETLISTS',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                  letterSpacing: 1.2,
-                ),
+          ListTile(
+            leading: Icon(Icons.calendar_month, color: AppColors.textMain),
+            title: Text(
+              'Schedules',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: AppColors.textMain,
               ),
             ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.zero,
-              itemCount: setlists.length,
-              itemBuilder: (context, index) {
-                final setlist = setlists[index];
-                final isSelected = selectedSetlist?.id == setlist.id;
-
-                return ListTile(
-                  title: Text(
-                    setlist.title,
-                    style: TextStyle(
-                      color: isSelected
-                          ? AppColors.accentGold
-                          : AppColors.textMain,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                  ),
-                  subtitle: Text(
-                    setlist.date ?? 'No date',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 12),
-                  ),
-                  selected: isSelected,
-                  selectedTileColor: AppColors.accentGoldLight.withOpacity(0.1),
-                  leading: Icon(
-                    Icons.format_list_bulleted,
-                    color: isSelected
-                        ? AppColors.accentGold
-                        : AppColors.textMuted,
-                  ),
-                  onTap: () {
-                    onSetlistSelected(setlist);
-                    Navigator.pop(context); // close drawer automatically
-                  },
-                );
-              },
-            ),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ScheduleScreen()),
+              );
+            },
           ),
           Divider(color: AppColors.borderLight),
           ListTile(
@@ -137,7 +97,7 @@ class AppDrawer extends StatelessWidget {
               ),
             ),
             onTap: () async {
-              Navigator.pop(context); // close drawer automatically
+              Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => CreateSetlistScreen()),

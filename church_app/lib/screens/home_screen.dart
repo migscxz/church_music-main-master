@@ -142,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildSetlistsAccordion() {
     if (_isLoading) {
       return Center(
         child: CircularProgressIndicator(color: AppColors.accentGold),
@@ -157,78 +157,101 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
-    return Center(
-      child: Text(
-        'Open the sidebar to select a Setlist.',
-        style: TextStyle(color: AppColors.textSecondary),
-      ),
-    );
-  }
-
-  Widget _buildSetlistDetail() {
-    if (_selectedSetlist == null) return _buildEmptyState();
-
-    if (_selectedSetlist!.songVersions.isEmpty) {
-      return Center(
-        child: Text(
-          'This setlist has no songs yet.',
-          style: TextStyle(color: AppColors.textSecondary),
-        ),
-      );
-    }
 
     return RefreshIndicator(
       color: AppColors.accentGold,
       onRefresh: _triggerBackgroundSync,
       child: ListView.builder(
         padding: EdgeInsets.all(16),
-        itemCount: _selectedSetlist!.songVersions.length,
-        itemBuilder: (context, index) {
-          final version = _selectedSetlist!.songVersions[index];
+        itemCount: _setlists.length,
+        itemBuilder: (context, setlistIndex) {
+          final setlist = _setlists[setlistIndex];
           return Card(
-            color: AppColors.surfaceWarm,
+            color: AppColors.surface,
             elevation: 0,
             margin: EdgeInsets.only(bottom: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
               side: BorderSide(color: AppColors.borderLight, width: 1.5),
             ),
-            child: ListTile(
-              contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              leading: CircleAvatar(
-                backgroundColor: AppColors.accentGoldLight,
-                child: Text(
-                  '${index + 1}',
-                  style: TextStyle(
-                    color: AppColors.accentGold,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+            child: ExpansionTile(
+              collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              backgroundColor: AppColors.surfaceWarm,
               title: Text(
-                version.song?.title ?? 'Unknown Title',
+                setlist.title,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                   color: AppColors.textMain,
+                  fontFamily: 'Cormorant Garamond',
                 ),
               ),
               subtitle: Text(
-                'Key: ${version.key} • Leader: ${version.leader?.name ?? "System"}',
-                style: TextStyle(color: AppColors.textSecondary),
+                setlist.date ?? 'No date',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
               ),
-              trailing: Icon(Icons.music_note, color: AppColors.textMuted),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChordViewerScreen(
-                      songVersion: version,
-                      listContext: _selectedSetlist!.title,
+              children: [
+                if (setlist.songVersions.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      'This setlist has no songs yet.',
+                      style: TextStyle(color: AppColors.textSecondary),
                     ),
-                  ),
-                );
-              },
+                  )
+                else
+                  ...setlist.songVersions.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final version = entry.value;
+                    return Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(color: AppColors.borderLight),
+                        ),
+                      ),
+                      child: ListTile(
+                        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        leading: CircleAvatar(
+                          backgroundColor: AppColors.accentGoldLight,
+                          radius: 16,
+                          child: Text(
+                            '${index + 1}',
+                            style: TextStyle(
+                              color: AppColors.accentGold,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        title: Text(
+                          version.song?.title ?? 'Unknown Title',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: AppColors.textMain,
+                          ),
+                        ),
+                        subtitle: Text(
+                          'Key: ${version.key} • Leader: ${version.leader?.name ?? "System"}',
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                        ),
+                        trailing: Icon(Icons.music_note, color: AppColors.textMuted, size: 20),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChordViewerScreen(
+                                songVersion: version,
+                                listContext: setlist.title,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  }).toList(),
+              ],
             ),
           );
         },
@@ -242,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          _selectedSetlist?.title ?? 'Church Music',
+          'Church Music',
           style: TextStyle(
             color: AppColors.textMain,
             fontFamily: 'Cormorant Garamond',
@@ -271,15 +294,11 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       drawer: AppDrawer(
-        setlists: _setlists,
+        setlists: _setlists, // keeping for signature compatibility if needed
         selectedSetlist: _selectedSetlist,
-        onSetlistSelected: (Setlist setlist) {
-          setState(() {
-            _selectedSetlist = setlist;
-          });
-        },
+        onSetlistSelected: (Setlist setlist) {},
       ),
-      body: _buildSetlistDetail(),
+      body: _buildSetlistsAccordion(),
     );
   }
 }

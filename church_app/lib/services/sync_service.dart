@@ -106,6 +106,22 @@ class SyncService {
         await db.insertSetlists(setlistsToInsert);
         await db.insertSetlistSongVersions(setlistVersionLinks);
       }
+
+      // 6. Sync Schedules
+      final schedulesRes = await _apiService.get('/schedules');
+      if (schedulesRes.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(schedulesRes.body);
+        List<Map<String, dynamic>> schedulesToInsert = [];
+
+        for (var s in data) {
+          schedulesToInsert.add({
+            'id': s['id'],
+            'month_year': s['month_year'],
+            'weeks_json': jsonEncode(s['weeks'] ?? []),
+          });
+        }
+        await db.insertSchedules(schedulesToInsert);
+      }
     } catch (e) {
       print('Sync everything failed: $e');
     }
