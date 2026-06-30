@@ -31,7 +31,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 return;
             }
             try {
-                const response = await api.get('/auth/user');
+                // UPDATE: Dinagdagan ng /api/
+                const response = await api.get('/api/auth/user');
                 setUser(response.data);
             } catch (error) {
                 console.error("Failed to fetch user, logging out", error);
@@ -52,7 +53,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const logout = async () => {
         try {
-            await api.post('/logout');
+            // UPDATE: Dinagdagan ng /api/
+            await api.post('/api/logout');
         } catch (error) {
             console.error("Logout failed on server", error);
         } finally {
