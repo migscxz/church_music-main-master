@@ -21,8 +21,7 @@ const Login = () => {
         setIsLoading(true);
 
         try {
-            // DITO YUNG PAGBABAGO: Naging /api/login na siya
-            const response = await api.post('/api/login', { email, password });
+            const response = await api.post('/login', { email, password });
             login(response.data.access_token, response.data.user);
             navigate('/');
         } catch (err: any) {
