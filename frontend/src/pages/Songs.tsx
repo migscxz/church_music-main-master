@@ -134,7 +134,7 @@ const Songs = () => {
         };
 
         if (user?.role === 'admin' && !editingSong && assignedOwnerId) {
-            payload.user_id = parseInt(assignedOwnerId);
+            payload.song_leader_id = parseInt(assignedOwnerId);
         }
 
         saveMutation.mutate(payload);

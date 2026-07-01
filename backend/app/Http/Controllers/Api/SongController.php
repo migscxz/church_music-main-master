@@ -29,7 +29,7 @@ class SongController extends Controller
             'original_key' => 'nullable|string|max:10',
             'tags' => 'nullable|array',
             'tags.*' => 'exists:tags,id',
-            'user_id' => 'nullable|exists:users,id', // Allow optional user_id for admins
+            'song_leader_id' => 'nullable|exists:song_leaders,id',
         ]);
 
         // Only explicitly authenticated users can create songs
@@ -38,22 +38,33 @@ class SongController extends Controller
             return response()->json(['message' => 'Unauthorized to create songs'], 403);
         }
 
-        // If user is admin and provided a user_id, use it. Otherwise, use own id.
-        if ($user->role === 'admin' && isset($validated['user_id'])) {
-            // Use the provided user_id
-        } else {
-            $validated['user_id'] = $user->id;
-        }
-
         $song = Song::create([
             'title' => $validated['title'],
             'original_artist' => $validated['original_artist'] ?? null,
             'original_key' => $validated['original_key'] ?? null,
-            'user_id' => $validated['user_id'],
+            'user_id' => $user->id,
         ]);
 
         if ($request->has('tags')) {
             $song->tags()->attach($request->input('tags'));
+        }
+
+        $targetLeaderId = null;
+        if ($user->role === 'admin' && !empty($validated['song_leader_id'])) {
+            $targetLeaderId = $validated['song_leader_id'];
+        } else if ($user->role !== 'admin') {
+            $leader = \App\Models\SongLeader::where('name', $user->name)->first();
+            if ($leader) {
+                $targetLeaderId = $leader->id;
+            }
+        }
+
+        if ($targetLeaderId) {
+            \App\Models\SongVersion::create([
+                'song_id' => $song->id,
+                'song_leader_id' => $targetLeaderId,
+                'key' => $validated['original_key'] ?? 'C',
+            ]);
         }
 
         return response()->json($song->load(['versions.leader', 'tags']), 201);

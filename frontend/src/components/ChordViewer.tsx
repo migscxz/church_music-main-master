@@ -134,33 +134,31 @@ const ChordViewer = ({ originalKey, chords, songTitle, leaderName, tempo, youtub
                     mso-page-orientation: ${isLandscape ? 'landscape' : 'portrait'};
                     margin: 0.5in 0.5in 0.5in 0.5in;
                 }
+                @page Section2 {
+                    size: ${isLandscape ? '11.0in 8.5in' : '8.5in 11.0in'};
+                    mso-page-orientation: ${isLandscape ? 'landscape' : 'portrait'};
+                    margin: 0.5in 0.5in 0.5in 0.5in;
+                    mso-columns: ${layoutCols} even 0.3in;
+                }
                 div.Section1 { page: Section1; }
+                div.Section2 { page: ${layoutCols > 1 ? 'Section2' : 'Section1'}; }
             </style>
         </head><body>`;
         const footer = "</body></html>";
 
-        let chordsHtml = '';
-        if (layoutCols > 1) {
-            const lines = transposedChords.split('\n');
-            const linesPerCol = Math.ceil(lines.length / layoutCols);
-            chordsHtml += '<table style="width: 100%; table-layout: fixed;" border="0" cellpadding="0" cellspacing="0"><tr>';
-            for (let i = 0; i < layoutCols; i++) {
-                const colLines = lines.slice(i * linesPerCol, (i + 1) * linesPerCol);
-                const colText = colLines.join('\n').replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br/>").replace(/ /g, "&nbsp;");
-                chordsHtml += `<td style="width: ${100 / layoutCols}%; vertical-align: top; padding-right: 10px; font-family: 'Courier New', Courier, monospace; font-size: ${fontSize}; line-height: 1.2; word-wrap: break-word;">${colText}</td>`;
-            }
-            chordsHtml += '</tr></table>';
-        } else {
-            chordsHtml = `<div style="font-family: 'Courier New', Courier, monospace; font-size: ${fontSize}; white-space: pre-wrap; line-height: 1.2;">
-${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br/>").replace(/ /g, "&nbsp;")}
-            </div>`;
-        }
+        const chordsContent = transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br/>").replace(/ /g, "&nbsp;");
+        
+        const chordsHtml = `<div style="font-family: 'Courier New', Courier, monospace; font-size: ${fontSize}; white-space: pre-wrap; line-height: 1.2; column-count: ${layoutCols}; column-gap: 3rem;">
+${chordsContent}
+        </div>`;
 
         const content = `
             <div class="Section1" style="font-family: Arial, sans-serif;">
                 <h1 style="font-size: 24pt; margin-bottom: 4pt;">${songTitle}</h1>
                 <p style="color: #666; font-size: 11pt; margin-top: 0;">Leader: <strong>${leaderName}</strong> &nbsp;|&nbsp; Key: <strong>${targetKey}</strong></p>
                 <hr style="border: 1px solid #ccc; margin-bottom: 16pt;" />
+            </div>
+            <div class="${layoutCols > 1 ? 'Section2' : 'Section1'}">
                 ${chordsHtml}
             </div>
         `;
@@ -182,7 +180,7 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
         let optimumSize = 16;
         contentRef.current.style.fontSize = `${optimumSize}px`;
 
-        while (contentRef.current.scrollHeight > 850 && optimumSize > 9) {
+        while ((contentRef.current.scrollHeight > 850 || contentRef.current.scrollWidth > contentRef.current.clientWidth) && optimumSize > 9) {
             optimumSize -= 0.5;
             contentRef.current.style.fontSize = `${optimumSize}px`;
         }
@@ -322,24 +320,26 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
 
     return (
         <div className="bg-white rounded-xl shadow-md border border-gray-100 mt-6 overflow-hidden print:shadow-none print:border-none print:m-0 print:rounded-none print:overflow-visible">
-            <div className="p-4 bg-gray-50 border-b flex flex-wrap gap-4 items-center justify-between print:hidden">
+            <div className="p-3 sm:p-4 bg-gray-50 border-b flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-start sm:items-center justify-between print:hidden">
 
                 {/* Key Controls */}
-                <div className="flex items-center space-x-3">
-                    <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">Key:</label>
-                    <select
-                        value={targetKey}
-                        onChange={(e) => setTargetKey(e.target.value)}
-                        className="border border-gray-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-blue-500 bg-white min-w-[60px]"
-                    >
-                        {ALL_KEYS.map(k => (
-                            <option key={k} value={k}>{k}</option>
-                        ))}
-                    </select>
+                <div className="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
+                    <div className="flex items-center space-x-2">
+                        <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">Key:</label>
+                        <select
+                            value={targetKey}
+                            onChange={(e) => setTargetKey(e.target.value)}
+                            className="border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-blue-500 bg-white min-w-[60px]"
+                        >
+                            {ALL_KEYS.map(k => (
+                                <option key={k} value={k}>{k}</option>
+                            ))}
+                        </select>
+                    </div>
                     {targetKey !== originalKey && (
                         <button
                             onClick={() => setTargetKey(originalKey)}
-                            className="text-xs flex items-center text-gray-500 hover:text-blue-600 transition-colors"
+                            className="text-xs flex items-center text-gray-500 hover:text-blue-600 transition-colors bg-white px-2 py-1 rounded-md border border-gray-200"
                             title="Reset to Original Key"
                         >
                             <RefreshCcw className="w-3.5 h-3.5 mr-1" /> Reset
@@ -348,8 +348,8 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
                 </div>
 
                 {/* Layout Controls */}
-                <div className="flex flex-wrap items-center space-x-4 bg-white px-3 py-1 border border-gray-200 rounded-lg">
-                    <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 bg-white px-3 py-1.5 border border-gray-200 rounded-lg w-full sm:w-auto justify-center sm:justify-start">
+                    <div className="hidden sm:flex items-center space-x-2">
                         <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">Columns:</label>
                         <select
                             value={layoutCols}
@@ -362,7 +362,7 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
                         </select>
                     </div>
 
-                    <div className="w-px h-5 bg-gray-200"></div>
+                    <div className="hidden sm:block w-px h-5 bg-gray-200"></div>
 
                     <div className="flex items-center space-x-2">
                         <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">Text:</label>
@@ -377,11 +377,11 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
                         </div>
                     </div>
 
-                    <div className="w-px h-5 bg-gray-200"></div>
+                    <div className="hidden sm:block w-px h-5 bg-gray-200"></div>
 
                     <button
                         onClick={handleAutoFit}
-                        className="flex items-center text-sm text-gray-600 hover:text-blue-600 transition-colors pr-2"
+                        className="hidden sm:flex items-center text-sm text-gray-600 hover:text-blue-600 transition-colors pr-2"
                         title="Auto-fit to 1 page"
                     >
                         <Maximize className="w-4 h-4 mr-1" /> Auto-Fit
@@ -389,7 +389,7 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
                 </div>
 
                 {/* Action Controls */}
-                <div className="flex items-center space-x-2 ml-auto">
+                <div className="flex flex-wrap items-center gap-2 ml-0 sm:ml-auto w-full sm:w-auto justify-center sm:justify-start">
                     <button
                         onClick={() => {
                             setIsPracticeMode(true);
@@ -429,7 +429,7 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
                 </div>
             </div>
 
-            <div className="p-8 overflow-x-auto bg-white border-t border-gray-100 print:p-0 print:overflow-visible">
+            <div className="p-4 sm:p-8 overflow-x-auto bg-white border-t border-gray-100 print:p-0 print:overflow-visible">
                 <div ref={printRef} className="print-container mx-auto min-h-[500px] max-w-4xl print:max-w-none print:min-h-0">
 
                     {/* Header: visible in print & PDF */}
@@ -448,14 +448,23 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
                     </div>
 
                     {/* The rendered chords */}
-                    <pre
+                    <style>{`
+                        @media (max-width: 639px) {
+                            .chord-content {
+                                column-count: 1 !important;
+                            }
+                        }
+                    `}</style>
+                    <pre 
                         ref={contentRef}
-                        className="leading-tight text-[#1a1814] whitespace-pre-wrap chord-content light-theme"
+                        className="leading-tight text-[#1a1814] whitespace-pre-wrap chord-content light-theme max-w-4xl mx-auto"
                         style={{
                             fontFamily: "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace",
                             columnCount: layoutCols,
-                            columnGap: '4rem',
+                            columnGap: '3rem',
                             fontSize: `${fontSize}px`,
+                            columnFill: 'auto',
+                            maxHeight: layoutCols > 1 ? '850px' : 'none',
                         }}
                     >
                         <div dangerouslySetInnerHTML={{ __html: parsedChordsHtml }}></div>
@@ -502,14 +511,14 @@ ${transposedChords.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<
                         width: 100% !important;
                         max-width: none !important;
                         background: white !important;
-                        /* Force fit into exactly one printed page */
-                        height: 100vh !important;
-                        max-height: 100vh !important;
-                        overflow: hidden !important;
+                        overflow: visible !important;
                     }
                     
                     .chord-content {
                         color: #000 !important;
+                        /* Allow multi-page printing: remove max height and let the browser paginate naturally */
+                        max-height: none !important;
+                        column-fill: balance !important;
                     }
                     .chord-content .chord {
                         color: #000 !important; 
