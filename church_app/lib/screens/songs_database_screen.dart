@@ -232,6 +232,7 @@ class _SongsDatabaseScreenState extends State<SongsDatabaseScreen> {
         ),
         backgroundColor: AppColors.surface,
         elevation: 0,
+        automaticallyImplyLeading: false,
         iconTheme: IconThemeData(color: AppColors.textMain),
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(110),

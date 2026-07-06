@@ -24,6 +24,7 @@ class _CreateSetlistScreenState extends State<CreateSetlistScreen> {
   List<SongVersion> _availableVersions = [];
   List<String> _uniqueLeaders = ['All Leaders'];
   String _leaderFilter = 'All Leaders';
+  String _searchQuery = '';
   final List<int> _selectedVersionIds = [];
 
   @override
@@ -127,11 +128,12 @@ class _CreateSetlistScreenState extends State<CreateSetlistScreen> {
   @override
   Widget build(BuildContext context) {
     // Filter logic
-    final filteredVersions = _leaderFilter == 'All Leaders'
-        ? _availableVersions
-        : _availableVersions
-              .where((v) => v.leader?.name == _leaderFilter)
-              .toList();
+    final filteredVersions = _availableVersions.where((v) {
+      final matchesLeader = _leaderFilter == 'All Leaders' || v.leader?.name == _leaderFilter;
+      final matchesSearch = _searchQuery.isEmpty || 
+          (v.song?.title.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+      return matchesLeader && matchesSearch;
+    }).toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -250,7 +252,34 @@ class _CreateSetlistScreenState extends State<CreateSetlistScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: 12),
+                    TextField(
+                      onChanged: (val) {
+                        setState(() => _searchQuery = val);
+                      },
+                      style: TextStyle(color: AppColors.textMain),
+                      decoration: InputDecoration(
+                        hintText: 'Search songs...',
+                        hintStyle: TextStyle(color: AppColors.textSecondary),
+                        prefixIcon: Icon(Icons.search, color: AppColors.textMuted),
+                        filled: true,
+                        fillColor: AppColors.surface,
+                        contentPadding: EdgeInsets.symmetric(vertical: 0),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: AppColors.borderLight),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: AppColors.borderLight),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: AppColors.accentGold),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 12),
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(

@@ -184,6 +184,7 @@ class ScheduleScreenState extends State<ScheduleScreen> {
         ),
         backgroundColor: AppColors.surface,
         elevation: 0,
+        automaticallyImplyLeading: false,
         iconTheme: IconThemeData(color: AppColors.textMain),
       ),
       body: _isLoading

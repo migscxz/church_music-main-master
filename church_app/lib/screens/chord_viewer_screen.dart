@@ -4,7 +4,6 @@ import '../utils/constants.dart';
 import '../utils/chord_transposer.dart';
 import '../utils/chord_dictionary.dart';
 import 'package:flutter_guitar_tabs/flutter_guitar_tabs.dart';
-import 'pitch_detection_screen.dart';
 
 class ChordViewerScreen extends StatefulWidget {
   final SongVersion songVersion;
@@ -120,22 +119,6 @@ class _ChordViewerScreenState extends State<ChordViewerScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: textColor),
         actions: [
-          IconButton(
-            icon: Icon(Icons.mic, color: textColor),
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const PitchDetectionScreen()),
-              );
-              
-              if (result != null && result is String) {
-                setState(() {
-                  _targetKey = result;
-                });
-              }
-            },
-            tooltip: 'Detect Key',
-          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: DropdownButtonHideUnderline(

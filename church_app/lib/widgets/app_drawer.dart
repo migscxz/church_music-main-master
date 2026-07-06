@@ -3,9 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/models.dart';
 import '../utils/constants.dart';
-import '../screens/songs_database_screen.dart';
 import '../screens/create_setlist_screen.dart';
-import '../screens/schedule_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   final List<Setlist> setlists;
@@ -52,58 +50,23 @@ class AppDrawer extends StatelessWidget {
             ),
           ),
           ListTile(
-            leading: Icon(Icons.library_music, color: AppColors.textMain),
-            title: Text(
-              'Songs Database',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: AppColors.textMain,
-              ),
-            ),
-            onTap: () {
-              Navigator.pop(context); // close drawer
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => SongsDatabaseScreen()),
-              );
-            },
-          ),
-          Divider(color: AppColors.borderLight),
-          ListTile(
-            leading: Icon(Icons.calendar_month, color: AppColors.textMain),
-            title: Text(
-              'Schedules',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: AppColors.textMain,
-              ),
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ScheduleScreen()),
-              );
-            },
-          ),
-          Divider(color: AppColors.borderLight),
-          ListTile(
             leading: Icon(Icons.add_to_photos, color: AppColors.accentGold),
             title: Text(
               'New Setlist',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: AppColors.accentGold,
+                color: AppColors.textMain,
               ),
             ),
-            onTap: () async {
+            onTap: () {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => CreateSetlistScreen()),
+                MaterialPageRoute(builder: (_) => const CreateSetlistScreen()),
               );
             },
           ),
+          Divider(color: AppColors.borderLight),
           ListTile(
             leading: Icon(Icons.logout, color: AppColors.error),
             title: Text('Sign Out', style: TextStyle(color: AppColors.error)),

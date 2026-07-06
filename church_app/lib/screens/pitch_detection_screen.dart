@@ -80,107 +80,135 @@ class _PitchDetectionScreenState extends State<PitchDetectionScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Sing to Detect Key'),
-        backgroundColor: AppColors.surface,
+        title: const Text('Pitch Detector'),
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        automaticallyImplyLeading: false,
         iconTheme: const IconThemeData(color: AppColors.textMain),
+        centerTitle: true,
         titleTextStyle: const TextStyle(
-            color: AppColors.textMain, fontSize: 18, fontWeight: FontWeight.bold),
+            color: AppColors.textMain, fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Cormorant Garamond'),
       ),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Play or sing to build key profile:',
-                style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+                'Sing or play an instrument to detect your key.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
               ),
-              const SizedBox(height: 16),
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _currentNote != '--'
-                      ? AppColors.accentGold.withOpacity(0.2)
-                      : Colors.grey.withOpacity(0.1),
-                  border: Border.all(
-                    color: _currentNote != '--'
-                        ? AppColors.accentGold
-                        : Colors.grey,
-                    width: 4,
+              const SizedBox(height: 40),
+              
+              // Glowing mic animation container
+              GestureDetector(
+                onTap: () {
+                  if (_isListening) {
+                    _stopDetection();
+                  } else {
+                    _startDetection();
+                  }
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  width: _isListening ? 160 : 140,
+                  height: _isListening ? 160 : 140,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.primaryDark,
+                    boxShadow: _isListening 
+                      ? [
+                          BoxShadow(
+                            color: AppColors.accentGold.withOpacity(0.4),
+                            blurRadius: 40,
+                            spreadRadius: 10,
+                          )
+                        ]
+                      : [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 20,
+                            spreadRadius: 5,
+                          )
+                        ],
+                    border: Border.all(
+                      color: _isListening ? AppColors.accentGold : AppColors.borderLight,
+                      width: _isListening ? 3 : 1,
+                    ),
                   ),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  _currentNote,
-                  style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: _currentNote != '--'
-                        ? AppColors.accentGold
-                        : AppColors.textSecondary,
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        _isListening ? Icons.mic : Icons.mic_none,
+                        size: 40,
+                        color: _isListening ? AppColors.accentGold : AppColors.textSecondary,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _currentNote,
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: _currentNote != '--'
+                              ? AppColors.textMain
+                              : AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
               const SizedBox(height: 12),
               Text(
-                'Live note',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                _isListening ? 'Listening...' : 'Tap to start',
+                style: TextStyle(
+                  color: _isListening ? AppColors.accentGold : AppColors.textSecondary, 
+                  fontSize: 13,
+                  fontWeight: _isListening ? FontWeight.bold : FontWeight.normal
+                ),
               ),
               const SizedBox(height: 24),
+              
               if (_errorMessage.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 24.0),
                   child: Text(
-                    'Error: $_errorMessage\n(You likely need to fully restart the app via the terminal to load the new microphone plugin!)',
-                    style: TextStyle(color: Colors.red, fontSize: 14),
+                    'Error: $_errorMessage',
+                    style: TextStyle(color: AppColors.error, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
                 ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  TextButton.icon(
-                    onPressed: () {
-                      if (_isListening) {
-                        _stopDetection();
-                      } else {
-                        _startDetection();
-                      }
-                    },
-                    icon: Icon(_isListening ? Icons.pause : Icons.play_arrow),
-                    label: Text(_isListening ? 'Stop Listening' : 'Start Listening'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.textMain,
-                    ),
-                  ),
-                  TextButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _noteHistogram.clear();
-                        _topEstimates.clear();
-                        _currentNote = '--';
-                      });
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Reset'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.grey,
-                    ),
-                  ),
-                ],
+                
+              TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _noteHistogram.clear();
+                    _topEstimates.clear();
+                    _currentNote = '--';
+                  });
+                },
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text('Reset Data'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 24),
+              
               if (_topEstimates.isNotEmpty) ...[
-                Text(
-                  'Top Estimations',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textMain),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Detected Keys',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textMain),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Expanded(
@@ -188,32 +216,38 @@ class _PitchDetectionScreenState extends State<PitchDetectionScreen> {
                     itemCount: _topEstimates.length,
                     itemBuilder: (context, index) {
                       final est = _topEstimates[index];
-                      // Rough match percentage to show confidence simply (clamp 0-100)
                       int matchPct = ((est.score * 100).clamp(0, 100)).round();
+                      
+                      // Highest confidence gets gold highlight
+                      final bool isTop = index == 0;
 
-                      return Card(
-                        color: AppColors.surface,
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: isTop ? AppColors.accentGoldLight : AppColors.primaryDark,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isTop ? AppColors.accentGold : AppColors.borderLight,
+                            width: isTop ? 1.5 : 1,
+                          )
+                        ),
                         child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                          leading: CircleAvatar(
+                            backgroundColor: isTop ? AppColors.accentGold : AppColors.borderLight,
+                            radius: 18,
+                            child: Icon(Icons.music_note, color: isTop ? AppColors.primaryDark : AppColors.textSecondary, size: 20),
+                          ),
                           title: Text(
                             est.keyName,
                             style: TextStyle(
-                                color: AppColors.textMain,
+                                color: isTop ? AppColors.accentGold : AppColors.textMain,
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(
-                            'Confidence Score: ~$matchPct',
+                            'Confidence: $matchPct%',
                             style: TextStyle(color: AppColors.textSecondary),
-                          ),
-                          trailing: ElevatedButton(
-                            onPressed: () {
-                              _stopDetection();
-                              Navigator.pop(context, est.rootNote);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.accentGold,
-                              foregroundColor: Colors.white,
-                            ),
-                            child: const Text('Use Key'),
                           ),
                         ),
                       );
@@ -224,8 +258,8 @@ class _PitchDetectionScreenState extends State<PitchDetectionScreen> {
                 Expanded(
                   child: Center(
                     child: Text(
-                      'Waiting for notes...',
-                      style: TextStyle(color: AppColors.textSecondary),
+                      'Play some notes to see key estimations here.',
+                      style: TextStyle(color: AppColors.textMuted),
                     ),
                   ),
                 ),

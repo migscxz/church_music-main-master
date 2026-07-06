@@ -92,7 +92,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.primaryDark,
+                  color: AppColors.accentGold,
+                  fontFamily: 'Cormorant Garamond',
                 ),
               ),
               SizedBox(height: 8),
@@ -105,24 +106,50 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
+                style: TextStyle(color: AppColors.textMain),
                 decoration: InputDecoration(
-                  labelText: 'Email Address',
-                  border: OutlineInputBorder(),
+                  labelText: 'Email',
+                  labelStyle: TextStyle(color: AppColors.textSecondary),
+                  prefixIcon: Icon(Icons.email_outlined, color: AppColors.textSecondary),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppColors.borderLight),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppColors.borderLight),
+                  ),
                   focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: AppColors.accentGold),
                   ),
+                  filled: true,
+                  fillColor: AppColors.surface,
                 ),
               ),
               SizedBox(height: 16),
               TextField(
                 controller: _passwordController,
                 obscureText: true,
+                style: TextStyle(color: AppColors.textMain),
                 decoration: InputDecoration(
                   labelText: 'Password',
-                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: AppColors.textSecondary),
+                  prefixIcon: Icon(Icons.lock_outline, color: AppColors.textSecondary),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppColors.borderLight),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppColors.borderLight),
+                  ),
                   focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: AppColors.accentGold),
                   ),
+                  filled: true,
+                  fillColor: AppColors.surface,
                 ),
               ),
               SizedBox(height: 8),
@@ -144,7 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     onTap: () => setState(() => _rememberMe = !_rememberMe),
                     child: Text(
                       'Remember Me',
-                      style: TextStyle(color: AppColors.textMain, fontSize: 14),
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
                     ),
                   ),
                 ],
