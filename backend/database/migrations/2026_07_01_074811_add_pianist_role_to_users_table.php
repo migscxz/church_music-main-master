@@ -12,7 +12,29 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement("ALTER TABLE users MODIFY COLUMN role ENUM('admin', 'leader', 'member', 'pianist') NOT NULL DEFAULT 'member'");
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver === 'mysql') {
+            DB::statement("ALTER TABLE users MODIFY COLUMN role ENUM('admin', 'leader', 'member', 'pianist') NOT NULL DEFAULT 'member'");
+        } elseif ($driver === 'pgsql') {
+            DB::unprepared('
+                DO $$ 
+                DECLARE 
+                    constraint_name text;
+                BEGIN 
+                    SELECT conname INTO constraint_name 
+                    FROM pg_constraint 
+                    WHERE conrelid = \'users\'::regclass 
+                    AND contype = \'c\' 
+                    AND pg_get_constraintdef(oid) LIKE \'%role%\';
+                    
+                    IF constraint_name IS NOT NULL THEN
+                        EXECUTE \'ALTER TABLE users DROP CONSTRAINT \' || constraint_name;
+                    END IF;
+                END $$;
+            ');
+            DB::statement("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role::text = ANY (ARRAY['admin'::character varying, 'leader'::character varying, 'member'::character varying, 'pianist'::character varying]::text[]))");
+        }
     }
 
     /**
@@ -20,7 +42,28 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Revert back to the original ENUM (may fail if there are existing users with the 'pianist' role)
-        DB::statement("ALTER TABLE users MODIFY COLUMN role ENUM('admin', 'leader', 'member') NOT NULL DEFAULT 'member'");
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver === 'mysql') {
+            DB::statement("ALTER TABLE users MODIFY COLUMN role ENUM('admin', 'leader', 'member') NOT NULL DEFAULT 'member'");
+        } elseif ($driver === 'pgsql') {
+            DB::unprepared('
+                DO $$ 
+                DECLARE 
+                    constraint_name text;
+                BEGIN 
+                    SELECT conname INTO constraint_name 
+                    FROM pg_constraint 
+                    WHERE conrelid = \'users\'::regclass 
+                    AND contype = \'c\' 
+                    AND pg_get_constraintdef(oid) LIKE \'%role%\';
+                    
+                    IF constraint_name IS NOT NULL THEN
+                        EXECUTE \'ALTER TABLE users DROP CONSTRAINT \' || constraint_name;
+                    END IF;
+                END $$;
+            ');
+            DB::statement("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role::text = ANY (ARRAY['admin'::character varying, 'leader'::character varying, 'member'::character varying]::text[]))");
+        }
     }
 };
