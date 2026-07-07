@@ -1,9 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { transposeText, getStepDifference, ALL_KEYS } from '../utils/transposer';
 import { FileDown, RefreshCcw, ZoomIn, ZoomOut, Maximize, Printer, FileText, Play, Pause, X, Moon } from 'lucide-react';
+import GuitarChord from './GuitarChord';
+import PianoChord from './PianoChord';
+import { getGuitarFingering, getPianoNotes } from '../utils/chordDictionaries';
 
 interface ChordViewerProps {
     originalKey: string;
+    originalCapo?: number;
     chords: string;
     songTitle: string;
     leaderName: string;
@@ -11,15 +15,19 @@ interface ChordViewerProps {
     youtubeLink?: string | null;
 }
 
-const ChordViewer = ({ originalKey, chords, songTitle, leaderName, tempo, youtubeLink }: ChordViewerProps) => {
+const ChordViewer = ({ originalKey, originalCapo = 0, chords, songTitle, leaderName, tempo, youtubeLink }: ChordViewerProps) => {
     const [targetKey, setTargetKey] = useState(originalKey || 'C');
+    const [capo, setCapo] = useState<number>(originalCapo);
     const [layoutCols, setLayoutCols] = useState(1);
     const [fontSize, setFontSize] = useState(14);
     
     // Practice Mode State
     const [isPracticeMode, setIsPracticeMode] = useState(false);
+    const [practiceKey, setPracticeKey] = useState(originalKey || 'C');
     const [isPlaying, setIsPlaying] = useState(false);
     const [scrollSpeed, setScrollSpeed] = useState(5);
+    const [diagramMode, setDiagramMode] = useState<'off' | 'guitar' | 'piano'>('off');
+    const [hoveredChord, setHoveredChord] = useState<{ chord: string, x: number, y: number } | null>(null);
 
     const printRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLPreElement>(null);
@@ -37,7 +45,9 @@ const ChordViewer = ({ originalKey, chords, songTitle, leaderName, tempo, youtub
     }, [chords, isPracticeMode]);
 
     // Calculate step difference and transpose text
-    const stepDiff = getStepDifference(originalKey || 'C', targetKey);
+    const activeKey = isPracticeMode ? practiceKey : targetKey;
+    const keyDiff = getStepDifference(originalKey || 'C', activeKey);
+    const stepDiff = keyDiff + (originalCapo - capo);
     const transposedChordsRaw = transposeText(chords, stepDiff);
     
     // Auto-format: remove trailing spaces and replace 3+ consecutive newlines with 2 (1 blank line)
@@ -98,14 +108,20 @@ const ChordViewer = ({ originalKey, chords, songTitle, leaderName, tempo, youtub
     const bpm = bpmMatch ? parseInt(bpmMatch[1], 10) : 0;
     const beatDuration = bpm > 0 ? 60 / bpm : 1;
 
-    // Quick Transpose
+    // Quick Transpose (used only in Practice Mode)
     const handleTranspose = (direction: 'up' | 'down') => {
-        const currentIndex = ALL_KEYS.indexOf(targetKey);
+        const currentKey = isPracticeMode ? practiceKey : targetKey;
+        const currentIndex = ALL_KEYS.indexOf(currentKey);
         if (currentIndex === -1) return;
         let newIndex = direction === 'up' ? currentIndex + 1 : currentIndex - 1;
         if (newIndex >= ALL_KEYS.length) newIndex = 0;
         if (newIndex < 0) newIndex = ALL_KEYS.length - 1;
-        setTargetKey(ALL_KEYS[newIndex]);
+        
+        if (isPracticeMode) {
+            setPracticeKey(ALL_KEYS[newIndex]);
+        } else {
+            setTargetKey(ALL_KEYS[newIndex]);
+        }
     };
 
     const handleExportPDF = () => {
@@ -188,13 +204,20 @@ ${chordsContent}
         setFontSize(Math.max(9, optimumSize));
     };
 
-    // Prepare chords HTML: split by double newlines into stanzas to prevent page breaks inside stanzas when printing
+    const chordRegex = /(?<![A-Za-z])([A-G][#b]?(?:m|maj|min|dim|aug|sus)?\d*(?:\/[A-G][#b]?)?)(?![a-zA-Z#b])/g;
+
     const parsedChordsHtml = transposedChords
         .split('\n\n')
         .map(stanza => {
             const htmlStanza = stanza
                 .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-                .replace(/\[(.*?)\]/g, '<span class="chord">[$1]</span>'); // Chord Highlighting
+                // Temporarily hide bracketed section headers to protect them from chord regex
+                .replace(/\[(.*?)\]/g, '___SECTION_$1___')
+                // Highlight actual chords and add interactive data attributes
+                .replace(chordRegex, '<span class="chord chord-interactive" data-chord="$1" style="cursor: pointer; position: relative; z-index: 10;">$1</span>')
+                // Restore section headers
+                .replace(/___SECTION_(.*?)___/g, '<span class="song-section-title">[$1]</span>');
+
             return `<div class="stanza" style="break-inside: avoid; page-break-inside: avoid; margin-bottom: 1.5em;">${htmlStanza}</div>`;
         })
         .join('');
@@ -213,15 +236,30 @@ ${chordsContent}
                         </button>
                         <div>
                             <h2 className="text-xl font-bold text-white leading-tight">{songTitle}</h2>
-                            <p className="text-sm text-gray-400">Key: {targetKey} • {leaderName} {tempo ? `• ${tempo}` : ''}</p>
+                            <p className="text-sm text-gray-400">Key: {practiceKey} • {leaderName} {tempo ? `• ${tempo}` : ''}</p>
                         </div>
                     </div>
 
                     {/* Quick Transpose Controls */}
-                    <div className="flex items-center space-x-1 bg-[#222] px-2 py-1 rounded-lg">
-                        <button onClick={() => handleTranspose('down')} className="p-1.5 text-gray-400 hover:text-white rounded font-bold font-mono">-</button>
-                        <span className="text-sm w-8 text-center font-bold text-[var(--accent)]">{targetKey}</span>
-                        <button onClick={() => handleTranspose('up')} className="p-1.5 text-gray-400 hover:text-white rounded font-bold font-mono">+</button>
+                    <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-1 bg-[#222] px-2 py-1 rounded-lg">
+                            <button onClick={() => handleTranspose('down')} className="p-1.5 text-gray-400 hover:text-white rounded font-bold font-mono">-</button>
+                            <span className="text-sm w-8 text-center font-bold text-[var(--accent)]">{practiceKey}</span>
+                            <button onClick={() => handleTranspose('up')} className="p-1.5 text-gray-400 hover:text-white rounded font-bold font-mono">+</button>
+                        </div>
+                    {originalCapo > 0 && (
+                        <div className="flex items-center space-x-2 bg-[#222] px-2 py-1 rounded-lg">
+                            <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider pl-1">Capo</span>
+                            <select
+                                value={capo}
+                                onChange={(e) => setCapo(Number(e.target.value))}
+                                className="bg-transparent text-sm font-bold text-[var(--accent)] border-none focus:ring-0 cursor-pointer py-1 pr-6 pl-1"
+                            >
+                                <option value={0} className="bg-[#222] text-white">None</option>
+                                <option value={originalCapo} className="bg-[#222] text-white">{originalCapo}</option>
+                            </select>
+                        </div>
+                    )}
                     </div>
                     
                     {/* Auto-Scroll Controls */}
@@ -250,6 +288,15 @@ ${chordsContent}
                     </div>
 
                     <div className="flex items-center space-x-4">
+                        <div className="hidden md:flex items-center space-x-2 mr-4">
+                            <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Diagrams</span>
+                            <div className="flex items-center bg-[#222] rounded-lg p-1">
+                                <button onClick={() => setDiagramMode('off')} className={`px-3 py-1 rounded text-xs font-semibold ${diagramMode === 'off' ? 'bg-[var(--accent)] text-[#111]' : 'text-gray-400 hover:text-gray-200'}`}>Off</button>
+                                <button onClick={() => setDiagramMode('guitar')} className={`px-3 py-1 rounded text-xs font-semibold ${diagramMode === 'guitar' ? 'bg-[var(--accent)] text-[#111]' : 'text-gray-400 hover:text-gray-200'}`}>Guitar</button>
+                                <button onClick={() => setDiagramMode('piano')} className={`px-3 py-1 rounded text-xs font-semibold ${diagramMode === 'piano' ? 'bg-[var(--accent)] text-[#111]' : 'text-gray-400 hover:text-gray-200'}`}>Piano</button>
+                            </div>
+                        </div>
+
                         <div className="flex items-center space-x-1 bg-[#222] px-2 py-1 rounded-lg">
                             <button onClick={() => setFontSize(s => Math.max(12, s - 2))} className="p-1.5 text-gray-400 hover:text-white rounded" title="Decrease Font">
                                 <ZoomOut className="w-4 h-4" />
@@ -269,6 +316,37 @@ ${chordsContent}
                         maskImage: 'linear-gradient(to bottom, transparent 0%, black 10%, black 85%, transparent 100%)',
                         WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 10%, black 85%, transparent 100%)'
                     }}
+                    onMouseMove={(e) => {
+                        if (diagramMode === 'off') {
+                            setHoveredChord(null);
+                            return;
+                        }
+                        const target = e.target as HTMLElement;
+                        if (target.classList.contains('chord-interactive')) {
+                            const chordName = target.getAttribute('data-chord');
+                            if (chordName) {
+                                const rect = target.getBoundingClientRect();
+                                setHoveredChord({ chord: chordName, x: rect.left + rect.width / 2, y: rect.top - 10 });
+                            }
+                        } else {
+                            setHoveredChord(null);
+                        }
+                    }}
+                    onClick={(e) => {
+                        if (diagramMode === 'off') {
+                            setHoveredChord(null);
+                            return;
+                        }
+                        const target = e.target as HTMLElement;
+                        if (target.classList.contains('chord-interactive')) {
+                            const chordName = target.getAttribute('data-chord');
+                            if (chordName) {
+                                const rect = target.getBoundingClientRect();
+                                setHoveredChord({ chord: chordName, x: rect.left + rect.width / 2, y: rect.top - 10 });
+                            }
+                        }
+                    }}
+                    onMouseLeave={() => setHoveredChord(null)}
                 >
                     <pre
                         ref={contentRef}
@@ -281,10 +359,47 @@ ${chordsContent}
                     </pre>
                 </div>
 
+                {hoveredChord && diagramMode !== 'off' && (
+                    <div 
+                        style={{
+                            position: 'fixed',
+                            left: hoveredChord.x,
+                            top: hoveredChord.y,
+                            transform: 'translate(-50%, -100%)',
+                            zIndex: 9999,
+                            pointerEvents: 'none'
+                        }}
+                        className="bg-[#e4e0d9] p-2 pt-3 rounded-lg shadow-2xl border border-[#c0bbb5]"
+                    >
+                        {diagramMode === 'guitar' && getGuitarFingering(hoveredChord.chord) && (
+                            <GuitarChord chordName={hoveredChord.chord} fingering={getGuitarFingering(hoveredChord.chord)!} />
+                        )}
+                        {diagramMode === 'piano' && getPianoNotes(hoveredChord.chord) && (
+                            <PianoChord chordName={hoveredChord.chord} notes={getPianoNotes(hoveredChord.chord)!} />
+                        )}
+                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[90%] w-0 h-0 border-l-[8px] border-r-[8px] border-t-[8px] border-transparent border-t-[#e4e0d9]"></div>
+                    </div>
+                )}
+
                 <style>{`
+                    .song-section-title {
+                        font-weight: 700;
+                        color: #2d3748;
+                    }
                     .practice-theme .chord {
+                        color: #c9a84c; /* Gold color for chords */
+                        font-weight: 700;
+                    }
+                    .practice-theme .song-section-title {
                         color: var(--accent);
                         font-weight: 700;
+                        text-transform: uppercase;
+                        letter-spacing: 0.05em;
+                        opacity: 0.9;
+                    }
+                    .practice-theme .chord-interactive:hover {
+                        background: rgba(201, 168, 76, 0.15);
+                        border-radius: 4px;
                     }
                     @keyframes pulse-metronome {
                         0% { opacity: 1; transform: scale(1.2); }
@@ -336,6 +451,19 @@ ${chordsContent}
                             ))}
                         </select>
                     </div>
+                    {originalCapo > 0 && (
+                        <div className="flex items-center space-x-2">
+                            <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">Capo:</label>
+                            <select
+                                value={capo}
+                                onChange={(e) => setCapo(Number(e.target.value))}
+                                className="border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-blue-500 bg-white min-w-[90px]"
+                            >
+                                <option value={0}>No capo</option>
+                                <option value={originalCapo}>{originalCapo}{originalCapo === 1 ? 'st' : originalCapo === 2 ? 'nd' : originalCapo === 3 ? 'rd' : 'th'} fret</option>
+                            </select>
+                        </div>
+                    )}
                     {targetKey !== originalKey && (
                         <button
                             onClick={() => setTargetKey(originalKey)}
@@ -392,6 +520,7 @@ ${chordsContent}
                 <div className="flex flex-wrap items-center gap-2 ml-0 sm:ml-auto w-full sm:w-auto justify-center sm:justify-start">
                     <button
                         onClick={() => {
+                            setPracticeKey(targetKey); // inherit current key
                             setIsPracticeMode(true);
                             setFontSize(18); // Bump font size up for practice mode
                             setLayoutCols(1); // Force single column for scrolling
@@ -440,10 +569,15 @@ ${chordsContent}
                                 <span>Leader: <strong className="text-[var(--bg-surface)]">{leaderName}</strong></span>
                             </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex flex-col items-end gap-1">
                             <div className="text-[13px] font-bold text-[#8a6d2f] bg-[rgba(201,168,76,0.1)] border border-[rgba(201,168,76,0.2)] rounded-full px-4 py-1.5">
                                 Key of {targetKey}
                             </div>
+                            {capo > 0 && (
+                                <div className="text-[12.5px] font-semibold text-gray-500 pr-2">
+                                    Capo: {capo}{capo === 1 ? 'st' : capo === 2 ? 'nd' : capo === 3 ? 'rd' : 'th'} fret
+                                </div>
+                            )}
                         </div>
                     </div>
 

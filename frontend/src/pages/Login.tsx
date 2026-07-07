@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { Music, Lock, Mail } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Prism from '../components/ReactBits/Prism/Prism';
+import Preloader from '../components/Preloader';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -202,7 +203,7 @@ const Login = () => {
             `}</style>
 
             <div className="login-container">
-                <div style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, zIndex: 1, opacity: 0.3 }}>
+                <div style={{ position: 'absolute', inset: 0, zIndex: 0, opacity: 0.7 }}>
                     <Prism
                         animationType="3drotate"
                         timeScale={0.2}
@@ -215,6 +216,19 @@ const Login = () => {
                         glow={0.5}
                     />
                 </div>
+
+                <AnimatePresence>
+                    {isLoading && (
+                        <motion.div 
+                            initial={{ opacity: 0 }} 
+                            animate={{ opacity: 1 }} 
+                            exit={{ opacity: 0 }}
+                            style={{ position: 'fixed', inset: 0, zIndex: 999999 }}
+                        >
+                            <Preloader text="Authenticating..." fullScreen={true} />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 <motion.div 
                     initial={{ opacity: 0, y: 20, scale: 0.95 }}

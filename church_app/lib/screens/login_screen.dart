@@ -16,6 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _rememberMe = false;
+  bool _obscurePassword = true;
 
   @override
   void initState() {
@@ -130,12 +131,23 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: 16),
               TextField(
                 controller: _passwordController,
-                obscureText: true,
+                obscureText: _obscurePassword,
                 style: TextStyle(color: AppColors.textMain),
                 decoration: InputDecoration(
                   labelText: 'Password',
                   labelStyle: TextStyle(color: AppColors.textSecondary),
                   prefixIcon: Icon(Icons.lock_outline, color: AppColors.textSecondary),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      color: AppColors.textSecondary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: AppColors.borderLight),
@@ -179,8 +191,8 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: 24),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryDark,
-                  foregroundColor: AppColors.surface,
+                  backgroundColor: AppColors.accentGold,
+                  foregroundColor: AppColors.primaryDark,
                   padding: EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),

@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Pencil, Trash2, Plus, X, Search, Music, ChevronDown, ArrowDownToLine } from 'lucide-react';
+import { Trash2, Pencil, Search, Plus, Music, UserCheck, X, Link as LinkIcon, Download, ArrowDownToLine, ChevronDown, CheckCircle2 } from 'lucide-react';
+import Preloader from '../components/Preloader';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Tag {
@@ -16,6 +17,7 @@ interface Song {
     title: string;
     original_artist: string | null;
     original_key: string | null;
+    original_capo?: number;
     user_id?: number;
     tags?: Tag[];
     versions?: any[];
@@ -28,12 +30,13 @@ const Songs = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSong, setEditingSong] = useState<Song | null>(null);
     const { user } = useAuth();
-    const canCreate = user?.role === 'admin' || user?.role === 'leader';
+    const canCreate = user?.role === 'admin' || user?.role === 'leader' || user?.role === 'pianist';
 
     const [title, setTitle] = useState('');
     const [originalArtist, setOriginalArtist] = useState('');
     const [showArtistSuggestions, setShowArtistSuggestions] = useState(false);
     const [originalKey, setOriginalKey] = useState('');
+    const [originalCapo, setOriginalCapo] = useState<number>(0);
     const [searchQuery, setSearchQuery] = useState('');
     const [leaderFilter, setLeaderFilter] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('');
@@ -46,6 +49,7 @@ const Songs = () => {
     const [quickAddSong, setQuickAddSong] = useState<Song | null>(null);
     const [quickAddLeaderId, setQuickAddLeaderId] = useState('');
     const [quickAddKey, setQuickAddKey] = useState('C');
+    const [quickAddCapo, setQuickAddCapo] = useState<number>(0);
     const [quickAddTempo, setQuickAddTempo] = useState('');
     const [quickAddNotes, setQuickAddNotes] = useState('');
     const [quickAddChords, setQuickAddChords] = useState('');
@@ -130,10 +134,12 @@ const Songs = () => {
             title,
             original_artist: originalArtist || null,
             original_key: originalKey || null,
+            original_capo: originalCapo,
             tags: selectedCategories
         };
 
-        if (user?.role === 'admin' && !editingSong && assignedOwnerId) {
+        // When an admin or pianist adds a song and explicitly selects a song leader owner:
+        if ((user?.role === 'admin' || user?.role === 'pianist') && !editingSong && assignedOwnerId) {
             payload.song_leader_id = parseInt(assignedOwnerId);
         }
 
@@ -150,6 +156,7 @@ const Songs = () => {
         setTitle('');
         setOriginalArtist('');
         setOriginalKey('');
+        setOriginalCapo(0);
         setAssignedOwnerId('');
         setSelectedCategories([]);
         setEditingSong(null);
@@ -162,6 +169,7 @@ const Songs = () => {
             song_id: quickAddSong.id,
             song_leader_id: quickAddLeaderId,
             key: quickAddKey,
+            capo: quickAddCapo,
             tempo: quickAddTempo || null,
             notes: quickAddNotes || null,
             chords: quickAddChords || null,
@@ -176,6 +184,7 @@ const Songs = () => {
         setTitle(song.title);
         setOriginalArtist(song.original_artist || '');
         setOriginalKey(song.original_key || '');
+        setOriginalCapo(song.original_capo || 0);
         setSelectedCategories(song.tags ? song.tags.map(t => t.id) : []);
         setIsModalOpen(true);
     };
@@ -238,13 +247,8 @@ const Songs = () => {
     };
 
     if (loadingSongs) return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300, gap: 12 }}>
-            <motion.div 
-                animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 1.2, repeat: Infinity }}
-                style={{ width: 8, height: 8, borderRadius: '50%', background: '#c9a84c' }} 
-            />
-            <span style={{ fontFamily: "'DM Sans', sans-serif", color: '#888', fontSize: 14 }}>Loading songs…</span>
+        <div style={{ position: 'relative', height: 400, borderRadius: 14, overflow: 'hidden' }}>
+            <Preloader text="Loading songs..." fullScreen={false} />
         </div>
     );
 
@@ -348,6 +352,11 @@ const Songs = () => {
                                                     <p className="song-artist">{song.original_artist || 'Unknown Artist'}</p>
                                                     <div className="song-meta">
                                                         <span className="meta-badge meta-badge-neutral">Original Key: {song.original_key || 'N/A'}</span>
+                                                        {song.original_capo ? (
+                                                            <span className="meta-badge meta-badge-accent" style={{ opacity: 0.8 }}>
+                                                                Capo: {song.original_capo}{song.original_capo === 1 ? 'st' : song.original_capo === 2 ? 'nd' : song.original_capo === 3 ? 'rd' : 'th'} fret
+                                                            </span>
+                                                        ) : null}
                                                         {song.tags?.map(t => <span key={t.id} className="meta-badge meta-badge-accent">{t.name}</span>)}
                                                     </div>
                                                 </div>
@@ -380,7 +389,7 @@ const Songs = () => {
                                                                     </button>
                                                                 )}
                                                                 <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
-                                                                    {(user?.role === 'admin' || user?.id === song.user_id) && (
+                                                                    {(user?.role === 'admin' || user?.role === 'pianist' || user?.id === song.user_id) && (
                                                                         <>
                                                                             <button onClick={() => openEditModal(song)} className="icon-btn icon-btn-edit">
                                                                                 <Pencil size={15} />
@@ -455,14 +464,23 @@ const Songs = () => {
                                             </div>
                                         )}
                                     </div>
-                                    <div className="form-field">
-                                        <label className="form-label">Original Key</label>
-                                        <select value={originalKey} onChange={e => setOriginalKey(e.target.value)} className="form-input">
-                                            <option value="">Unknown</option>
-                                            {musicalKeys.map(k => <option key={k} value={k}>{k}</option>)}
-                                        </select>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                        <div className="form-field">
+                                            <label className="form-label">Original Key</label>
+                                            <select value={originalKey} onChange={e => setOriginalKey(e.target.value)} className="form-input">
+                                                <option value="">Unknown</option>
+                                                {musicalKeys.map(k => <option key={k} value={k}>{k}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="form-field">
+                                            <label className="form-label">Capo Fret</label>
+                                            <select value={originalCapo} onChange={e => setOriginalCapo(Number(e.target.value))} className="form-input">
+                                                <option value={0}>No Capo</option>
+                                                {[1,2,3,4,5,6,7,8,9,10,11].map(n => <option key={n} value={n}>{n}</option>)}
+                                            </select>
+                                        </div>
                                     </div>
-                                    {user?.role === 'admin' && !editingSong && (
+                                    {(user?.role === 'admin' || user?.role === 'pianist') && !editingSong && (
                                         <div className="form-field">
                                             <label className="form-label">Assign to Leader</label>
                                             <select value={assignedOwnerId} onChange={e => setAssignedOwnerId(e.target.value)} className="form-input">
@@ -510,7 +528,7 @@ const Songs = () => {
                                 <div className="modal-body">
                                     <p style={{ fontSize: 13, color: '#8a8680', marginBottom: 16 }}>Adding <strong>{quickAddSong?.title}</strong> to your personal library.</p>
                                     
-                                    {user?.role === 'admin' && (
+                                    {(user?.role === 'admin' || user?.role === 'pianist') && (
                                         <div className="form-field">
                                             <label className="form-label">Assign to Leader *</label>
                                             <select value={quickAddLeaderId} onChange={e => setQuickAddLeaderId(e.target.value)} className="form-input" required>

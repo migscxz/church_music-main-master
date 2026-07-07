@@ -145,6 +145,7 @@ const Users = () => {
                 .role-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
                 .role-admin { background: rgba(220, 38, 38, 0.1); color: #dc2626; }
                 .role-leader { background: rgba(14, 165, 233, 0.1); color: #0ea5e9; }
+                .role-pianist { background: rgba(168, 85, 247, 0.1); color: #a855f7; }
                 .role-member { background: rgba(138, 134, 128, 0.1); color: #8a8680; }
 
                 .action-btn { width: 32px; height: 32px; border-radius: 8px; border: 1.5px solid #ede9e4; display: inline-flex; align-items: center; justify-content: center; background: transparent; cursor: pointer; color: #a09d98; transition: all 0.2s; }
@@ -259,6 +260,7 @@ const Users = () => {
                                         <select className="form-select" value={role} onChange={e => setRole(e.target.value as any)} required>
                                             <option value="member">Member (View Only)</option>
                                             <option value="leader">Song Leader (Manage Own Songs)</option>
+                                            <option value="pianist">Pianist / Arranger (Manage All Songs)</option>
                                             <option value="admin">Administrator (Full Access)</option>
                                         </select>
                                     </div>

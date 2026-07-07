@@ -82,7 +82,9 @@ class _SongsDatabaseScreenState extends State<SongsDatabaseScreen> {
               driveLink: v['drive_link'],
               chordReference: v['chord_reference'],
               song: song,
-              leader: SongLeader(id: v['leader_id'], name: v['leader_name']),
+              leader: v['leader_id'] != null
+                  ? SongLeader(id: v['leader_id'], name: v['leader_name'] ?? 'Unknown')
+                  : null,
             ),
           )
           .toList();
@@ -363,10 +365,17 @@ class _SongsDatabaseScreenState extends State<SongsDatabaseScreen> {
           ? Center(
               child: CircularProgressIndicator(color: AppColors.accentGold),
             )
-          : ListView.builder(
-              padding: EdgeInsets.all(16),
-              itemCount: _filteredSongs.length,
-              itemBuilder: (context, index) {
+          : RefreshIndicator(
+              color: AppColors.accentGold,
+              onRefresh: () async {
+                setState(() => _isLoading = true);
+                await SyncService().syncEverything();
+                await _fetchData();
+              },
+              child: ListView.builder(
+                padding: EdgeInsets.all(16),
+                itemCount: _filteredSongs.length,
+                itemBuilder: (context, index) {
                 final song = _filteredSongs[index];
                 final versions = _songToVersions[song.id] ?? [];
 
@@ -412,6 +421,7 @@ class _SongsDatabaseScreenState extends State<SongsDatabaseScreen> {
                 );
               },
             ),
+          ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.accentGold,
         tooltip: 'Add New Song',

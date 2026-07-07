@@ -15,6 +15,11 @@ class SongVersionController extends Controller
 
     public function store(Request $request)
     {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'song_id' => 'required|exists:songs,id',
             'song_leader_id' => 'required|exists:song_leaders,id',
@@ -26,6 +31,13 @@ class SongVersionController extends Controller
             'drive_link' => 'nullable|url|max:255',
             'chord_reference' => 'nullable|url|max:255',
         ]);
+
+        if (!in_array($user->role, ['admin', 'pianist'])) {
+            $leader = \App\Models\SongLeader::where('name', $user->name)->first();
+            if (!$leader || $leader->id != $validated['song_leader_id']) {
+                return response()->json(['message' => 'Unauthorized to create version for this leader'], 403);
+            }
+        }
 
         $version = SongVersion::create($validated);
         return response()->json($version->load(['song', 'leader']), 201);
@@ -40,6 +52,18 @@ class SongVersionController extends Controller
     public function update(Request $request, string $id)
     {
         $version = SongVersion::findOrFail($id);
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        if (!in_array($user->role, ['admin', 'pianist'])) {
+            $leader = \App\Models\SongLeader::where('name', $user->name)->first();
+            if (!$leader || $leader->id != $version->song_leader_id) {
+                return response()->json(['message' => 'Unauthorized to edit this version'], 403);
+            }
+        }
 
         $validated = $request->validate([
             'song_id' => 'sometimes|exists:songs,id',
@@ -57,9 +81,22 @@ class SongVersionController extends Controller
         return response()->json($version->load(['song', 'leader']));
     }
 
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
         $version = SongVersion::findOrFail($id);
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        if (!in_array($user->role, ['admin', 'pianist'])) {
+            $leader = \App\Models\SongLeader::where('name', $user->name)->first();
+            if (!$leader || $leader->id != $version->song_leader_id) {
+                return response()->json(['message' => 'Unauthorized to delete this version'], 403);
+            }
+        }
+
         $version->delete();
         return response()->json(null, 204);
     }

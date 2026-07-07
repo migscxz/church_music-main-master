@@ -30,11 +30,12 @@ class SongController extends Controller
             'tags' => 'nullable|array',
             'tags.*' => 'exists:tags,id',
             'song_leader_id' => 'nullable|exists:song_leaders,id',
+            'original_capo' => 'nullable|integer|min:0|max:11',
         ]);
 
         // Only explicitly authenticated users can create songs
         $user = $request->user();
-        if (!$user || !in_array($user->role, ['admin', 'leader'])) {
+        if (!$user || !in_array($user->role, ['admin', 'leader', 'pianist'])) {
             return response()->json(['message' => 'Unauthorized to create songs'], 403);
         }
 
@@ -42,6 +43,7 @@ class SongController extends Controller
             'title' => $validated['title'],
             'original_artist' => $validated['original_artist'] ?? null,
             'original_key' => $validated['original_key'] ?? null,
+            'original_capo' => $validated['original_capo'] ?? 0,
             'user_id' => $user->id,
         ]);
 
@@ -50,9 +52,9 @@ class SongController extends Controller
         }
 
         $targetLeaderId = null;
-        if ($user->role === 'admin' && !empty($validated['song_leader_id'])) {
+        if (in_array($user->role, ['admin', 'pianist']) && !empty($validated['song_leader_id'])) {
             $targetLeaderId = $validated['song_leader_id'];
-        } else if ($user->role !== 'admin') {
+        } else if (!in_array($user->role, ['admin', 'pianist'])) {
             $leader = \App\Models\SongLeader::where('name', $user->name)->first();
             if ($leader) {
                 $targetLeaderId = $leader->id;
@@ -82,7 +84,7 @@ class SongController extends Controller
         $user = $request->user();
 
         // Enforce update ownership
-        if (!$user || ($user->role !== 'admin' && $song->user_id !== $user->id)) {
+        if (!$user || (!in_array($user->role, ['admin', 'pianist']) && $song->user_id !== $user->id)) {
             return response()->json(['message' => 'Unauthorized to edit this song'], 403);
         }
 
@@ -98,13 +100,15 @@ class SongController extends Controller
             'original_artist' => 'nullable|string|max:255',
             'original_key' => 'nullable|string|max:10',
             'tags' => 'nullable|array',
-            'tags.*' => 'exists:tags,id'
+            'tags.*' => 'exists:tags,id',
+            'original_capo' => 'nullable|integer|min:0|max:11',
         ]);
 
         $song->update([
             'title' => $validated['title'],
             'original_artist' => $validated['original_artist'] ?? $song->original_artist,
             'original_key' => $validated['original_key'] ?? $song->original_key,
+            'original_capo' => $validated['original_capo'] ?? $song->original_capo,
         ]);
 
         if ($request->has('tags')) {

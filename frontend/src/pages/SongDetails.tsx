@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { ArrowLeft, User, Music2, Edit3, Trash2, Plus, X, Music, Youtube, HardDrive, ChevronDown } from 'lucide-react';
+import Preloader from '../components/Preloader';
 import ChordViewer from '../components/ChordViewer';
 import { transposeText, getStepDifference } from '../utils/transposer';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,6 +21,7 @@ interface SongVersion {
     chords: string;
     tempo: string;
     notes: string;
+    capo?: number;
     youtube_link?: string | null;
     drive_link?: string | null;
     chord_reference?: string | null;
@@ -31,6 +33,7 @@ interface Song {
     title: string;
     original_artist: string | null;
     original_key: string | null;
+    original_capo?: number;
     user_id?: number;
     versions?: SongVersion[];
 }
@@ -45,7 +48,7 @@ const SongDetails = () => {
     const [editingVersion, setEditingVersion] = useState<SongVersion | null>(null);
 
     const { user } = useAuth();
-    const canCreateVersion = user?.role === 'admin' || user?.role === 'leader';
+    const canCreateVersion = user?.role === 'admin' || user?.role === 'leader' || user?.role === 'pianist';
 
     const [leaderId, setLeaderId] = useState('');
     const [key, setKey] = useState('C');
@@ -93,7 +96,7 @@ const SongDetails = () => {
             const payload = {
                 song_id: id,
                 song_leader_id: leaderId,
-                key,
+                key: key || null,
                 tempo: tempo || null,
                 notes: notes || null,
                 chords: chords || null,
@@ -146,13 +149,8 @@ const SongDetails = () => {
     };
 
     if (loading) return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300, gap: 12 }}>
-            <motion.div 
-                animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 1.2, repeat: Infinity }}
-                style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)' }} 
-            />
-            <span style={{ fontFamily: "'DM Sans', sans-serif", color: '#888', fontSize: 14 }}>Loading song details…</span>
+        <div style={{ position: 'relative', height: 400, borderRadius: 14, overflow: 'hidden' }}>
+            <Preloader text="Loading song details..." fullScreen={false} />
         </div>
     );
 
@@ -324,6 +322,7 @@ const SongDetails = () => {
                         ) : (
                             song.versions?.map((version) => {
                                 const isExpanded = expandedVersionId === version.id;
+                                const canEdit = user?.role === 'admin' || user?.role === 'pianist' || (user?.name === version.leader?.name);
                                 return (
                                     <motion.div 
                                         key={version.id} 
@@ -342,10 +341,12 @@ const SongDetails = () => {
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                                <div className="card-actions">
-                                                    <button onClick={(e) => { e.stopPropagation(); openEditModal(version); }} className="card-btn"><Edit3 size={14} /></button>
-                                                    <button onClick={(e) => { e.stopPropagation(); handleDelete(version.id); }} className="card-btn"><Trash2 size={14} /></button>
-                                                </div>
+                                                {canEdit && (
+                                                    <div className="card-actions">
+                                                        <button onClick={(e) => { e.stopPropagation(); openEditModal(version); }} className="card-btn"><Edit3 size={14} /></button>
+                                                        <button onClick={(e) => { e.stopPropagation(); handleDelete(version.id); }} className="card-btn"><Trash2 size={14} /></button>
+                                                    </div>
+                                                )}
                                                 <motion.div animate={{ rotate: isExpanded ? 180 : 0 }}>
                                                     <ChevronDown size={18} color="#b0aba5" />
                                                 </motion.div>
@@ -384,6 +385,7 @@ const SongDetails = () => {
                                                             <ChordViewer 
                                                                 chords={version.chords} 
                                                                 originalKey={version.key} 
+                                                                originalCapo={song.original_capo || 0}
                                                                 songTitle={song.title}
                                                                 leaderName={version.leader?.name || 'Unknown Leader'}
                                                                 tempo={version.tempo}

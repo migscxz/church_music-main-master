@@ -15,7 +15,7 @@ class ScheduleController extends Controller
 
     public function store(Request $request)
     {
-        if ($request->user()->role !== 'admin') {
+        if (!in_array($request->user()->role, ['admin', 'pianist'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -30,7 +30,7 @@ class ScheduleController extends Controller
 
     public function update(Request $request, Schedule $schedule)
     {
-        if ($request->user()->role !== 'admin') {
+        if (!in_array($request->user()->role, ['admin', 'pianist'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -45,7 +45,7 @@ class ScheduleController extends Controller
 
     public function destroy(Request $request, Schedule $schedule)
     {
-        if ($request->user()->role !== 'admin') {
+        if (!in_array($request->user()->role, ['admin', 'pianist'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 

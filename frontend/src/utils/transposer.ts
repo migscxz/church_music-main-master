@@ -56,7 +56,7 @@ export const transposeText = (text: string, steps: number): string => {
         // Regex for grabbing words that look like chords.
         // It looks for A-G, optionally # or b, then optional suffixes like m, maj, dim, min, 7, 9, etc...
         // Also matching slash chords like C/E
-        const chordRegex = /\b([A-G][#b]?(?:m|maj|min|dim|aug|sus)?\d*(?:\/[A-G][#b]?)?)\b/g;
+        const chordRegex = /(?<![A-Za-z])([A-G][#b]?(?:m|maj|min|dim|aug|sus)?\d*(?:\/[A-G][#b]?)?)(?![a-zA-Z#b])/g;
 
         return line.replace(chordRegex, (match) => {
             // Handle slash chords, e.g., "C/E"

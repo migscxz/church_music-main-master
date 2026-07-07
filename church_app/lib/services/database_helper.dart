@@ -257,7 +257,7 @@ class DatabaseHelper {
       FROM song_versions sv
       JOIN setlist_song_version ssv ON sv.id = ssv.song_version_id
       JOIN songs s ON sv.song_id = s.id
-      JOIN song_leaders sl ON sv.leader_id = sl.id
+      LEFT JOIN song_leaders sl ON sv.leader_id = sl.id
       WHERE ssv.setlist_id = ?
     ''',
       [setlistId],
@@ -270,7 +270,7 @@ class DatabaseHelper {
       SELECT sv.*, s.title as song_title, s.original_key as song_original_key, sl.name as leader_name
       FROM song_versions sv
       JOIN songs s ON sv.song_id = s.id
-      JOIN song_leaders sl ON sv.leader_id = sl.id
+      LEFT JOIN song_leaders sl ON sv.leader_id = sl.id
     ''');
   }
 
@@ -297,7 +297,7 @@ class DatabaseHelper {
       '''
       SELECT sv.*, sl.name as leader_name
       FROM song_versions sv
-      JOIN song_leaders sl ON sv.leader_id = sl.id
+      LEFT JOIN song_leaders sl ON sv.leader_id = sl.id
       WHERE sv.song_id = ?
     ''',
       [songId],

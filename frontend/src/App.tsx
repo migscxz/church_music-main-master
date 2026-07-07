@@ -11,12 +11,12 @@ import SongLeaders from './pages/SongLeaders';
 import Setlists from './pages/Setlists';
 import Tags from './pages/Tags';
 import Schedule from './pages/Schedule';
-
 import Users from './pages/Users';
+import Preloader from './components/Preloader';
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const { user, isLoading } = useAuth();
-  if (isLoading) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f7f4f0', fontFamily: "'DM Sans', sans-serif", color: '#888' }}>Loading session...</div>;
+  if (isLoading) return <Preloader text="Authenticating..." />;
   if (!user) return <Navigate to="/login" replace />;
   return children;
 };

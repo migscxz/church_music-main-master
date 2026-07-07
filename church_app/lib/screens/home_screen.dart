@@ -51,7 +51,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: v['song_title'],
                 originalKey: v['song_original_key'],
               ),
-              leader: SongLeader(id: v['leader_id'], name: v['leader_name']),
+              leader: v['leader_id'] != null
+                  ? SongLeader(id: v['leader_id'], name: v['leader_name'] ?? 'Unknown')
+                  : null,
             ),
           )
           .toList();
@@ -106,7 +108,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: v['song_title'],
                 originalKey: v['song_original_key'],
               ),
-              leader: SongLeader(id: v['leader_id'], name: v['leader_name']),
+              leader: v['leader_id'] != null
+                  ? SongLeader(id: v['leader_id'], name: v['leader_name'] ?? 'Unknown')
+                  : null,
             ),
           )
           .toList();
