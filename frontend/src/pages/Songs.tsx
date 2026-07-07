@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Trash2, Pencil, Search, Plus, Music, UserCheck, X, Link as LinkIcon, Download, ArrowDownToLine, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { Trash2, Pencil, Search, Plus, Music, X, ArrowDownToLine, ChevronDown } from 'lucide-react';
 import Preloader from '../components/Preloader';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -49,7 +49,8 @@ const Songs = () => {
     const [quickAddSong, setQuickAddSong] = useState<Song | null>(null);
     const [quickAddLeaderId, setQuickAddLeaderId] = useState('');
     const [quickAddKey, setQuickAddKey] = useState('C');
-    const [quickAddCapo, setQuickAddCapo] = useState<number>(0);
+    const quickAddCapo = 0;
+
     const [quickAddTempo, setQuickAddTempo] = useState('');
     const [quickAddNotes, setQuickAddNotes] = useState('');
     const [quickAddChords, setQuickAddChords] = useState('');
