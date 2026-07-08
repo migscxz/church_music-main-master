@@ -215,7 +215,7 @@ const Tags = () => {
                     font-size: 21px; font-weight: 600; color: #1a1814; margin: 0 0 5px 0;
                 }
 
-                .tags-empty p { font-size: 13.5px; color: var(--text-muted); margin: 0; }
+                .tags-empty p { font-size: 13.5px; color: var(--text-inverse-muted); margin: 0; }
 
                 /* ── MODAL ── */
                 .modal-overlay {

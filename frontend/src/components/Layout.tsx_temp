@@ -33,7 +33,6 @@ const Layout = () => {
                     --text-primary: #f0ede8;
                     --text-muted: rgba(240,237,232,0.45);
                     --text-inverse: #0f1117;
-                    --text-inverse-muted: rgba(15,17,23,0.55);
                     --hover-bg: rgba(255,255,255,0.04);
                     --active-bg: rgba(201,168,76,0.12);
                     --main-bg: #f7f5f2;
@@ -147,7 +146,7 @@ const Layout = () => {
                 .brand-subtitle {
                     font-size: 10px;
                     font-weight: 500;
-                    color: var(--text-muted);
+                    color: var(--text-inverse-muted);
                     letter-spacing: 0.1em;
                     text-transform: uppercase;
                     margin: 0;
@@ -164,7 +163,7 @@ const Layout = () => {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    color: var(--text-muted);
+                    color: var(--text-inverse-muted);
                     transition: background 0.15s, color 0.15s;
                     flex-shrink: 0;
                     position: relative;
@@ -194,7 +193,7 @@ const Layout = () => {
                     font-weight: 600;
                     letter-spacing: 0.14em;
                     text-transform: uppercase;
-                    color: var(--text-muted);
+                    color: var(--text-inverse-muted);
                     padding: 18px 18px 8px;
                     white-space: nowrap;
                     overflow: hidden;
@@ -225,7 +224,7 @@ const Layout = () => {
                     border-radius: 8px;
                     text-decoration: none;
                     transition: background 0.18s, color 0.18s;
-                    color: var(--text-muted);
+                    color: var(--text-inverse-muted);
                     border: 1px solid transparent;
                     white-space: nowrap;
                     position: relative;
@@ -326,7 +325,7 @@ const Layout = () => {
 
                 .sidebar-footer-text {
                     font-size: 11px;
-                    color: var(--text-muted);
+                    color: var(--text-inverse-muted);
                     letter-spacing: 0.05em;
                     white-space: nowrap;
                 }
@@ -516,7 +515,7 @@ const Layout = () => {
                                     className={`nav-link${isActive ? ' active' : ''}`}
                                 >
                                     <div className="nav-link-icon">
-                                        <Icon size={16} color={isActive ? '#c9a84c' : 'var(--text-muted)'} />
+                                        <Icon size={16} color={isActive ? '#c9a84c' : 'var(--text-inverse-muted)'} />
                                     </div>
                                     <AnimatePresence mode="wait">
                                         {!isCollapsed && (
@@ -626,7 +625,7 @@ const MobileSidebarContents = ({
                 width: 30px; height: 30px; border-radius: 7px;
                 background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
                 cursor: pointer; display: flex; align-items: center; justify-content: center;
-                color: var(--text-muted); transition: all 0.14s;
+                color: var(--text-inverse-muted); transition: all 0.14s;
             }
             .mob-close:hover { background: rgba(255,255,255,0.08); color: #f0ede8; }
             .mob-nav { padding: 12px 8px; display: flex; flex-direction: column; gap: 2px; }
@@ -662,7 +661,7 @@ const MobileSidebarContents = ({
                 return (
                     <Link key={item.name} to={item.href} className={`mob-nav-link${isActive ? ' active' : ''}`} onClick={onLinkClick}>
                         <div className="mob-icon">
-                            <Icon size={16} color={isActive ? '#c9a84c' : 'var(--text-muted)'} />
+                            <Icon size={16} color={isActive ? '#c9a84c' : 'var(--text-inverse-muted)'} />
                         </div>
                         <div>
                             <span className="mob-name">{item.name}</span>

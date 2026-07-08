@@ -240,7 +240,7 @@ const SongLeaders = () => {
                     margin: 0 0 6px 0;
                 }
 
-                .leaders-empty p { font-size: 13.5px; color: var(--text-muted); margin: 0; }
+                .leaders-empty p { font-size: 13.5px; color: var(--text-inverse-muted); margin: 0; }
 
                 /* ── COUNT BAR ── */
                 .count-bar { margin-bottom: 14px; padding-left: 2px; }

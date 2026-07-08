@@ -206,7 +206,7 @@ const SongDetails = () => {
 
                 .hero-artist {
                     display: inline-flex; align-items: center; gap: 6px;
-                    font-size: 13.5px; color: var(--text-muted); margin: 0;
+                    font-size: 13.5px; color: var(--text-inverse-muted); margin: 0;
                 }
 
                 .btn-add-version {

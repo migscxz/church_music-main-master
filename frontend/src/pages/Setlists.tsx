@@ -229,7 +229,7 @@ const Setlists = () => {
                     border-radius: 7px; border: 1px solid rgba(255,255,255,0.1);
                     background: var(--sidebar-border);
                     cursor: pointer; display: flex; align-items: center; justify-content: center;
-                    color: var(--text-muted); transition: all 0.14s;
+                    color: var(--text-inverse-muted); transition: all 0.14s;
                 }
 
                 .hdr-btn-edit:hover { background: rgba(201,168,76,0.18); border-color: rgba(201,168,76,0.3); color: var(--accent); }
@@ -333,7 +333,7 @@ const Setlists = () => {
                     font-size: 22px; font-weight: 600; color: #1a1814; margin: 0 0 6px 0;
                 }
 
-                .setlists-empty p { font-size: 13.5px; color: var(--text-muted); margin: 0; }
+                .setlists-empty p { font-size: 13.5px; color: var(--text-inverse-muted); margin: 0; }
 
                 /* ── MODAL ── */
                 .modal-overlay {
@@ -655,7 +655,7 @@ const Setlists = () => {
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '12px' }}>
                                             <p className="songs-section-label" style={{ marginBottom: 0 }}>Select Song Versions</p>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Filter by Leader:</label>
+                                                <label style={{ fontSize: '12px', color: 'var(--text-inverse-muted)', fontWeight: 500 }}>Filter by Leader:</label>
                                                 <div style={{ position: 'relative' }}>
                                                     <select
                                                         value={leaderFilter}
@@ -668,7 +668,7 @@ const Setlists = () => {
                                                             <option key={name} value={name}>{name}</option>
                                                         ))}
                                                     </select>
-                                                    <ChevronDown size={12} color="var(--text-muted)" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                                                    <ChevronDown size={12} color="var(--text-inverse-muted)" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                                                 </div>
                                             </div>
                                         </div>
