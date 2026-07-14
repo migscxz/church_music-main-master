@@ -12,6 +12,7 @@ import Setlists from './pages/Setlists';
 import Tags from './pages/Tags';
 import Schedule from './pages/Schedule';
 import Users from './pages/Users';
+import PitchDetector from './pages/PitchDetector';
 import Preloader from './components/Preloader';
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
@@ -46,6 +47,7 @@ function App() {
             <Route path="setlists" element={<Setlists />} />
             <Route path="tags" element={<Tags />} />
             <Route path="schedule" element={<Schedule />} />
+            <Route path="pitch" element={<PitchDetector />} />
           </Route>
         </Routes>
       </BrowserRouter>

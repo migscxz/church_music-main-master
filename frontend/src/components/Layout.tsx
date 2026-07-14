@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Music, Users, ListMusic, Home, Menu, Tag, ChevronRight, X, LogOut, Shield, Calendar } from 'lucide-react';
+import { Music, Users, ListMusic, Home, Menu, Tag, ChevronRight, X, LogOut, Shield, Calendar, Mic } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,6 +18,7 @@ const Layout = () => {
         { name: 'Song Leaders', href: '/leaders', icon: Users, description: 'Team' },
         { name: 'Setlists', href: '/setlists', icon: ListMusic, description: 'Planning' },
         { name: 'Tags', href: '/tags', icon: Tag, description: 'Organize' },
+        { name: 'Pitch Detector', href: '/pitch', icon: Mic, description: 'Find your key' },
     ];
 
     return (
