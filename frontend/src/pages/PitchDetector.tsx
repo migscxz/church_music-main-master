@@ -169,6 +169,9 @@ const PitchDetector = () => {
                     font-size: 13px;
                     color: var(--text-muted);
                 }
+                .estimate-card.top-match .estimate-info p {
+                    color: var(--text-inverse-muted, #737373);
+                }
                 
                 @media (max-width: 768px) {
                     .pitch-header h1 { font-size: 28px; }
