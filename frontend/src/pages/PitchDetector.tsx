@@ -1,13 +1,27 @@
 import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Mic, MicOff, RefreshCw, Music } from 'lucide-react';
+import { Mic, MicOff, RefreshCw, Music, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { usePitchDetector } from '../utils/pitchDetector';
 import { KeyEstimator, type KeyEstimate } from '../utils/keyEstimator';
+import api from '../api';
 
 const PitchDetector = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
+    
+    // Destructure state if navigated from Setlists
+    const { targetVersionId, songTitle, leaderName } = (location.state as any) || {};
+
     const { isListening, currentNote, error, startListening, stopListening } = usePitchDetector();
     const [, setHistogram] = useState<Record<string, number>>({});
     const [topEstimates, setTopEstimates] = useState<KeyEstimate[]>([]);
+    
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveSuccess, setSaveSuccess] = useState(false);
+    const [saveError, setSaveError] = useState('');
 
     const handleNoteDetected = (note: string) => {
         setHistogram(prev => {
@@ -29,6 +43,29 @@ const PitchDetector = () => {
     const resetData = () => {
         setHistogram({});
         setTopEstimates([]);
+        setSaveSuccess(false);
+        setSaveError('');
+    };
+
+    const handleSaveKey = async (keyToSave: string) => {
+        if (!targetVersionId) return;
+        
+        setIsSaving(true);
+        setSaveError('');
+        
+        try {
+            await api.put(`/song-versions/${targetVersionId}`, { key: keyToSave });
+            setSaveSuccess(true);
+            stopListening();
+            // Invalidate all related caches so data updates instantly everywhere
+            queryClient.invalidateQueries({ queryKey: ['setlists'] });
+            queryClient.invalidateQueries({ queryKey: ['songs'] });
+            queryClient.invalidateQueries({ queryKey: ['song-versions'] });
+        } catch (err: any) {
+            setSaveError(err.response?.data?.message || 'Failed to save. You may not have permission.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -178,9 +215,25 @@ const PitchDetector = () => {
                 }
             `}</style>
 
-            <div className="pitch-header">
-                <h1>Pitch Detector</h1>
-                <p>Sing or play an instrument to detect your key.</p>
+            <div className="pitch-header" style={{ position: 'relative' }}>
+                {targetVersionId && (
+                    <button onClick={() => navigate('/setlists')} className="btn-ghost" style={{ position: 'absolute', top: '-10px', left: '0', padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center' }}>
+                        <ArrowLeft size={14} style={{ marginRight: '6px' }} /> Back
+                    </button>
+                )}
+                {targetVersionId ? (
+                    <>
+                        <h1>Finding Key for</h1>
+                        <p style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', marginTop: '8px' }}>
+                            {songTitle} <span style={{ fontWeight: 400, color: 'var(--text-inverse-muted)' }}>by {leaderName}</span>
+                        </p>
+                    </>
+                ) : (
+                    <>
+                        <h1>Pitch Detector</h1>
+                        <p>Sing or play an instrument to detect your key.</p>
+                    </>
+                )}
             </div>
 
             <div className="mic-container">
@@ -224,7 +277,10 @@ const PitchDetector = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4 }}
                 >
-                    <div className="estimates-title">Detected Keys</div>
+                    <div className="estimates-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        Detected Keys
+                        {saveError && <span style={{ color: '#e53e3e', fontSize: '12px', fontWeight: 'normal' }}>{saveError}</span>}
+                    </div>
                     {topEstimates.map((est, idx) => {
                         const isTop = idx === 0;
                         const matchPct = Math.round(Math.min(Math.max(est.score * 100, 0), 100));
@@ -239,10 +295,36 @@ const PitchDetector = () => {
                                 <div className="estimate-icon">
                                     <Music size={20} />
                                 </div>
-                                <div className="estimate-info">
+                                <div className="estimate-info" style={{ flex: 1 }}>
                                     <h4>{est.keyName}</h4>
                                     <p>Confidence: {matchPct}%</p>
                                 </div>
+                                {isTop && targetVersionId && !saveSuccess && (
+                                    <button 
+                                        onClick={() => handleSaveKey(est.rootNote)}
+                                        disabled={isSaving}
+                                        style={{ 
+                                            padding: '8px 18px', 
+                                            fontSize: '13px', 
+                                            fontWeight: 600,
+                                            background: '#c9a84c',
+                                            color: '#1a1200',
+                                            border: 'none',
+                                            borderRadius: '10px',
+                                            cursor: isSaving ? 'not-allowed' : 'pointer',
+                                            opacity: isSaving ? 0.7 : 1,
+                                            whiteSpace: 'nowrap',
+                                            flexShrink: 0
+                                        }}
+                                    >
+                                        {isSaving ? 'Saving...' : `Save ${est.rootNote}`}
+                                    </button>
+                                )}
+                                {isTop && targetVersionId && saveSuccess && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#0F9D58', fontSize: '13px', fontWeight: 500 }}>
+                                        <CheckCircle2 size={16} /> Saved!
+                                    </div>
+                                )}
                             </motion.div>
                         );
                     })}

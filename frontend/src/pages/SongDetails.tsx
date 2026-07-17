@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface SongLeader {
     id: number;
     name: string;
+    user_id?: number | null;
 }
 
 interface SongVersion {
@@ -58,6 +59,7 @@ const SongDetails = () => {
     const [youtubeLink, setYoutubeLink] = useState('');
     const [driveLink, setDriveLink] = useState('');
     const [chordReference, setChordReference] = useState('');
+    const [showAdvanced, setShowAdvanced] = useState(false);
 
     const [expandedVersionId, setExpandedVersionId] = useState<number | null>(null);
 
@@ -111,8 +113,10 @@ const SongDetails = () => {
             }
             setIsModalOpen(false);
             fetchData();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error saving song version:', error);
+            const msg = error.response?.data?.message || error.message || 'An error occurred while saving.';
+            alert(`Save failed: ${msg}`);
         }
     };
 
@@ -129,22 +133,30 @@ const SongDetails = () => {
 
     const openCreateModal = () => {
         setEditingVersion(null);
-        setLeaderId(leaders.length > 0 ? leaders[0].id.toString() : '');
-        setKey('C'); setTempo(''); setNotes(''); setChords('');
+        let defaultLeaderId = leaders.length > 0 ? leaders[0].id.toString() : '';
+        if (user?.role === 'leader') {
+            const myLeader = leaders.find(l => l.user_id === user.id);
+            if (myLeader) defaultLeaderId = myLeader.id.toString();
+        }
+        setLeaderId(defaultLeaderId);
+        setKey(''); setTempo(''); setNotes(''); setChords('');
         setYoutubeLink(''); setDriveLink(''); setChordReference('');
+        setShowAdvanced(false);
         setIsModalOpen(true);
     };
 
     const openEditModal = (version: SongVersion) => {
         setEditingVersion(version);
         setLeaderId(version.song_leader_id.toString());
-        setKey(version.key || 'C');
+        setKey(version.key || '');
         setTempo(version.tempo || '');
         setNotes(version.notes || '');
         setChords(version.chords || '');
         setYoutubeLink(version.youtube_link || '');
         setDriveLink(version.drive_link || '');
         setChordReference(version.chord_reference || '');
+        // Show advanced section if editing and any advanced fields have data
+        setShowAdvanced(!!(version.tempo || version.youtube_link || version.drive_link || version.chord_reference || version.chords));
         setIsModalOpen(true);
     };
 
@@ -422,7 +434,14 @@ const SongDetails = () => {
                                     <div className="form-grid">
                                         <div className="form-field">
                                             <label className="form-label">Leader</label>
-                                            <select value={leaderId} onChange={e => setLeaderId(e.target.value)} className="form-input" required>
+                                            <select 
+                                                value={leaderId} 
+                                                onChange={e => setLeaderId(e.target.value)} 
+                                                className="form-input" 
+                                                required
+                                                disabled={user?.role === 'leader'}
+                                                style={{ opacity: user?.role === 'leader' ? 0.7 : 1, cursor: user?.role === 'leader' ? 'not-allowed' : 'pointer' }}
+                                            >
                                                 {leaders.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
                                             </select>
                                         </div>
@@ -443,44 +462,65 @@ const SongDetails = () => {
                                                 }} 
                                                 className="form-input"
                                             >
+                                                <option value="">Unknown</option>
                                                 {musicalKeys.map(k => <option key={k} value={k}>{k}</option>)}
                                             </select>
                                         </div>
                                     </div>
-                                    <div className="form-grid">
-                                        <div className="form-field">
-                                            <label className="form-label">Tempo</label>
-                                            <input type="text" value={tempo} onChange={e => setTempo(e.target.value)} className="form-input" placeholder="e.g. 120 BPM" />
-                                        </div>
-                                        <div className="form-field">
-                                            <label className="form-label">YouTube Link</label>
-                                            <input type="url" value={youtubeLink} onChange={e => setYoutubeLink(e.target.value)} className="form-input" placeholder="https://youtube.com/..." />
-                                        </div>
-                                    </div>
-                                    <div className="form-grid">
-                                        <div className="form-field">
-                                            <label className="form-label">Google Drive Link</label>
-                                            <input type="url" value={driveLink} onChange={e => setDriveLink(e.target.value)} className="form-input" placeholder="https://drive.google.com/..." />
-                                        </div>
-                                        <div className="form-field">
-                                            <label className="form-label">Chord Reference (URL)</label>
-                                            <input type="url" value={chordReference} onChange={e => setChordReference(e.target.value)} className="form-input" placeholder="https://..." />
-                                        </div>
-                                    </div>
-                                    <div className="form-field" style={{ marginBottom: 16 }}>
-                                        <label className="form-label">Notes</label>
-                                        <textarea value={notes} onChange={e => setNotes(e.target.value)} className="form-input" style={{ height: 60 }} />
-                                    </div>
-                                    <div className="form-field">
-                                        <label className="form-label">Chords & Lyrics</label>
-                                        <textarea 
-                                            value={chords} 
-                                            onChange={e => setChords(e.target.value)} 
-                                            className="form-input" 
-                                            style={{ height: 200, fontFamily: 'monospace' }} 
-                                            placeholder="[G] How [D] great is our [Em] God..."
-                                        />
-                                    </div>
+
+                                    {/* Advanced Options Toggle */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAdvanced(v => !v)}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: 8,
+                                            background: 'none', border: 'none', cursor: 'pointer',
+                                            color: '#c9a84c', fontWeight: 600, fontSize: 13,
+                                            padding: '4px 0', marginBottom: showAdvanced ? 12 : 4
+                                        }}
+                                    >
+                                        <ChevronDown size={15} style={{ transform: showAdvanced ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+                                        {showAdvanced ? 'Hide Advanced Options' : '+ Add Tempo, Chords & Links'}
+                                    </button>
+
+                                    {showAdvanced && (
+                                        <>
+                                            <div className="form-grid">
+                                                <div className="form-field">
+                                                    <label className="form-label">Tempo</label>
+                                                    <input type="text" value={tempo} onChange={e => setTempo(e.target.value)} className="form-input" placeholder="e.g. 120 BPM" />
+                                                </div>
+                                                <div className="form-field">
+                                                    <label className="form-label">YouTube Link</label>
+                                                    <input type="url" value={youtubeLink} onChange={e => setYoutubeLink(e.target.value)} className="form-input" placeholder="https://youtube.com/..." />
+                                                </div>
+                                            </div>
+                                            <div className="form-grid">
+                                                <div className="form-field">
+                                                    <label className="form-label">Google Drive Link</label>
+                                                    <input type="url" value={driveLink} onChange={e => setDriveLink(e.target.value)} className="form-input" placeholder="https://drive.google.com/..." />
+                                                </div>
+                                                <div className="form-field">
+                                                    <label className="form-label">Chord Reference (URL)</label>
+                                                    <input type="url" value={chordReference} onChange={e => setChordReference(e.target.value)} className="form-input" placeholder="https://..." />
+                                                </div>
+                                            </div>
+                                            <div className="form-field" style={{ marginBottom: 16 }}>
+                                                <label className="form-label">Notes</label>
+                                                <textarea value={notes} onChange={e => setNotes(e.target.value)} className="form-input" style={{ height: 60 }} />
+                                            </div>
+                                            <div className="form-field">
+                                                <label className="form-label">Chords & Lyrics</label>
+                                                <textarea 
+                                                    value={chords} 
+                                                    onChange={e => setChords(e.target.value)} 
+                                                    className="form-input" 
+                                                    style={{ height: 200, fontFamily: 'monospace' }} 
+                                                    placeholder="[G] How [D] great is our [Em] God..."
+                                                />
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                                 <div className="modal-footer">
                                     <button type="button" onClick={() => setIsModalOpen(false)} className="btn-ghost">Cancel</button>

@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api';
-import { Pencil, Trash2, Plus, X, Calendar, ListMusic, Check, ChevronDown, ChevronRight, Youtube, HardDrive, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { Pencil, Trash2, Plus, X, Calendar, ListMusic, Check, ChevronDown, ChevronRight, Youtube, HardDrive, ExternalLink, Mic } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-interface SongLeader { id: number; name: string; }
+interface SongLeader { id: number; name: string; user_id?: number | null; }
 interface Song { id: number; title: string; original_key?: string; }
 interface SongVersion {
     id: number;
@@ -22,12 +24,16 @@ interface Setlist { id: number; title: string; date: string | null; song_version
 
 const Setlists = () => {
     const queryClient = useQueryClient();
+    const navigate = useNavigate();
+    const { user } = useAuth();
+    const isAdminOrPianist = user?.role === 'admin' || user?.role === 'pianist';
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSetlist, setEditingSetlist] = useState<Setlist | null>(null);
     const [title, setTitle] = useState('');
     const [date, setDate] = useState('');
     const [selectedVersionIds, setSelectedVersionIds] = useState<number[]>([]);
     const [leaderFilter, setLeaderFilter] = useState<string>('All');
+    const [versionSearch, setVersionSearch] = useState('');
 
     // Track which version is currently expanded. Map: setlistId -> versionId
     const [expandedVersions, setExpandedVersions] = useState<Record<number, number>>({});
@@ -42,6 +48,17 @@ const Setlists = () => {
         queryKey: ['song-versions'],
         queryFn: () => api.get('/song-versions').then(res => res.data)
     });
+
+    const { data: leadersData = [] } = useQuery<SongLeader[]>({
+        queryKey: ['song-leaders'],
+        queryFn: () => api.get('/song-leaders').then(res => res.data)
+    });
+
+    // For leaders: only show their own versions in the picker
+    const myLeaderProfile = isAdminOrPianist ? null : leadersData.find(l => l.user_id === user?.id) || null;
+    const versionsForPicker = isAdminOrPianist
+        ? availableVersions
+        : availableVersions.filter(v => v.leader?.id === myLeaderProfile?.id);
 
     const saveMutation = useMutation({
         mutationFn: async (payload: any) => {
@@ -76,7 +93,7 @@ const Setlists = () => {
     };
 
     const openCreateModal = () => {
-        setEditingSetlist(null); setTitle(''); setDate(''); setSelectedVersionIds([]); setLeaderFilter('All'); setIsModalOpen(true);
+        setEditingSetlist(null); setTitle(''); setDate(''); setSelectedVersionIds([]); setLeaderFilter('All'); setVersionSearch(''); setIsModalOpen(true);
     };
 
     const openEditModal = (setlist: Setlist) => {
@@ -86,6 +103,7 @@ const Setlists = () => {
         const rel = (setlist as any).song_versions || (setlist as any).songVersions || [];
         setSelectedVersionIds(rel.map((v: any) => v.id));
         setLeaderFilter('All');
+        setVersionSearch('');
         setIsModalOpen(true);
     };
 
@@ -114,9 +132,15 @@ const Setlists = () => {
     );
 
     const uniqueLeaders = Array.from(new Set(availableVersions.filter(v => v.leader).map(v => v.leader!.name))).sort();
-    const filteredVersions = leaderFilter === 'All'
-        ? availableVersions
-        : availableVersions.filter(v => v.leader?.name === leaderFilter);
+    const baseVersions = isAdminOrPianist
+        ? (leaderFilter === 'All' ? availableVersions : availableVersions.filter(v => v.leader?.name === leaderFilter))
+        : versionsForPicker;
+    const filteredVersions = versionSearch.trim()
+        ? baseVersions.filter(v =>
+            v.song?.title?.toLowerCase().includes(versionSearch.toLowerCase()) ||
+            v.leader?.name?.toLowerCase().includes(versionSearch.toLowerCase())
+          )
+        : baseVersions;
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -576,7 +600,23 @@ const Setlists = () => {
                                                         </motion.div>
                                                         <div style={{ flex: 1 }}>
                                                             <div className="version-song">{v.leader?.name} <span style={{ fontWeight: 400, color: '#9a9590' }}>—</span> {v.song?.title}</div>
-                                                            <div className="version-meta">Key of {v.key} {v.tempo && `· ${v.tempo}`}</div>
+                                                            <div className="version-meta" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                Key of {v.key || 'Unknown'} {v.tempo && `· ${v.tempo}`}
+                                                                {(!v.key || v.key === 'Unknown') && (
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            navigate('/pitch', { 
+                                                                                state: { targetVersionId: v.id, songTitle: v.song?.title, leaderName: v.leader?.name } 
+                                                                            });
+                                                                        }}
+                                                                        className="btn-ghost"
+                                                                        style={{ padding: '4px 8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(201,168,76,0.1)', color: 'var(--accent)', borderRadius: '6px' }}
+                                                                    >
+                                                                        <Mic size={12} /> Get Your Key
+                                                                    </button>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <AnimatePresence>
@@ -652,31 +692,51 @@ const Setlists = () => {
                                     </div>
 
                                     <div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '12px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
                                             <p className="songs-section-label" style={{ marginBottom: 0 }}>Select Song Versions</p>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <label style={{ fontSize: '12px', color: 'var(--text-inverse-muted)', fontWeight: 500 }}>Filter by Leader:</label>
-                                                <div style={{ position: 'relative' }}>
-                                                    <select
-                                                        value={leaderFilter}
-                                                        onChange={e => setLeaderFilter(e.target.value)}
-                                                        className="form-input"
-                                                        style={{ padding: '4px 28px 4px 10px', fontSize: '13px', minHeight: 'auto', appearance: 'none', background: '#f7f4f0', borderColor: '#e8e4df' }}
-                                                    >
-                                                        <option value="All">All Leaders</option>
-                                                        {uniqueLeaders.map(name => (
-                                                            <option key={name} value={name}>{name}</option>
-                                                        ))}
-                                                    </select>
-                                                    <ChevronDown size={12} color="var(--text-inverse-muted)" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                                            {isAdminOrPianist && (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <label style={{ fontSize: '12px', color: 'var(--text-inverse-muted)', fontWeight: 500 }}>Filter by Leader:</label>
+                                                    <div style={{ position: 'relative' }}>
+                                                        <select
+                                                            value={leaderFilter}
+                                                            onChange={e => setLeaderFilter(e.target.value)}
+                                                            className="form-input"
+                                                            style={{ padding: '4px 28px 4px 10px', fontSize: '13px', minHeight: 'auto', appearance: 'none', background: '#f7f4f0', borderColor: '#e8e4df' }}
+                                                        >
+                                                            <option value="All">All Leaders</option>
+                                                            {uniqueLeaders.map(name => (
+                                                                <option key={name} value={name}>{name}</option>
+                                                            ))}
+                                                        </select>
+                                                        <ChevronDown size={12} color="var(--text-inverse-muted)" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
+                                        </div>
+
+                                        {/* Search box */}
+                                        <div style={{ position: 'relative', marginBottom: '10px' }}>
+                                            <svg style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b0aba5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                            <input
+                                                type="text"
+                                                value={versionSearch}
+                                                onChange={e => setVersionSearch(e.target.value)}
+                                                placeholder="Search songs..."
+                                                className="form-input"
+                                                style={{ paddingLeft: '32px', fontSize: '13px' }}
+                                            />
                                         </div>
 
                                         <div className="versions-list">
                                             {filteredVersions.length === 0 ? (
                                                 <div className="no-versions-msg">
-                                                    {leaderFilter === 'All' ? 'No song versions exist yet. Add songs and leader versions first.' : `No songs found for leader: ${leaderFilter}`}
+                                                    {isAdminOrPianist
+                                                        ? (leaderFilter === 'All' ? 'No song versions exist yet.' : `No songs found for leader: ${leaderFilter}`)
+                                                        : myLeaderProfile
+                                                            ? 'You have no songs in your list yet. Go to Songs → Add to My Songs first!'
+                                                            : 'Your account is not linked to a Song Leader profile. Please ask an admin to link your account.'
+                                                    }
                                                 </div>
                                             ) : filteredVersions.map(v => {
                                                 const isSelected = selectedVersionIds.includes(v.id);

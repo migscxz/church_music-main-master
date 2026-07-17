@@ -45,18 +45,11 @@ const Songs = () => {
     const [expandedSongId, setExpandedSongId] = useState<number | null>(null);
 
     // Quick Add Version State
-    const [isQuickAddModalOpen, setIsQuickAddModalOpen] = useState(false);
-    const [quickAddSong, setQuickAddSong] = useState<Song | null>(null);
-    const [quickAddLeaderId, setQuickAddLeaderId] = useState('');
-    const [quickAddKey, setQuickAddKey] = useState('C');
-    const quickAddCapo = 0;
+    const [quickAddingId, setQuickAddingId] = useState<number | null>(null); // tracks which song is being quick-added
+    const [quickAddDoneId, setQuickAddDoneId] = useState<number | null>(null); // tracks success
 
-    const [quickAddTempo, setQuickAddTempo] = useState('');
-    const [quickAddNotes, setQuickAddNotes] = useState('');
-    const [quickAddChords, setQuickAddChords] = useState('');
-    const [quickAddYoutube, setQuickAddYoutube] = useState('');
-    const [quickAddDrive, setQuickAddDrive] = useState('');
-    const [quickAddChordRef, setQuickAddChordRef] = useState('');
+    // Auto-add version when creating new song (for leaders)
+    const [autoAddVersion, setAutoAddVersion] = useState(true);
 
     const musicalKeys = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
 
@@ -118,14 +111,16 @@ const Songs = () => {
 
     const quickAddMutation = useMutation({
         mutationFn: (payload: any) => api.post('/song-versions', payload),
-        onSuccess: () => {
+        onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['songs'] });
-            setIsQuickAddModalOpen(false);
-            setQuickAddSong(null);
+            setQuickAddingId(null);
+            setQuickAddDoneId(variables.song_id);
+            setTimeout(() => setQuickAddDoneId(null), 3000);
         },
-        onError: (error) => {
-            console.error('Error adding version to list:', error);
-            alert('An error occurred while adding this song to your list.');
+        onError: (error: any) => {
+            setQuickAddingId(null);
+            const msg = error.response?.data?.message || 'An error occurred while adding this song to your list.';
+            alert(msg);
         }
     });
 
@@ -144,7 +139,39 @@ const Songs = () => {
             payload.song_leader_id = parseInt(assignedOwnerId);
         }
 
-        saveMutation.mutate(payload);
+        if (editingSong) {
+            saveMutation.mutate(payload);
+        } else {
+            // If leader wants to auto-add their version, create song first, then version
+            try {
+                const res = await api.post('/songs', payload);
+                const newSong = res.data;
+                queryClient.invalidateQueries({ queryKey: ['songs'] });
+                setIsModalOpen(false);
+                resetForm();
+
+                // Auto-link: create a version with Unknown key for the leader
+                if (autoAddVersion && user?.role === 'leader' && myLeaderProfile) {
+                    quickAddMutation.mutate({
+                        song_id: newSong.id,
+                        song_leader_id: myLeaderProfile.id,
+                        key: null,
+                    });
+                } else if (autoAddVersion && (user?.role === 'admin' || user?.role === 'pianist') && assignedOwnerId) {
+                    quickAddMutation.mutate({
+                        song_id: newSong.id,
+                        song_leader_id: parseInt(assignedOwnerId),
+                        key: null,
+                    });
+                }
+            } catch (error: any) {
+                if (error.response?.status === 422 && error.response.data?.errors?.title) {
+                    alert('This exact song (Title + Artist) already exists in the catalog!');
+                } else {
+                    alert('An error occurred while saving the song.');
+                }
+            }
+        }
     };
 
     const handleDelete = async (id: number) => {
@@ -163,20 +190,19 @@ const Songs = () => {
         setEditingSong(null);
     };
 
-    const handleQuickAddSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!quickAddSong) return;
+    const handleQuickAdd = (song: Song) => {
+        if (!myLeaderProfile) return;
+        // Already has their version? Skip
+        const alreadyAdded = song.versions?.some(v => v.song_leader_id === myLeaderProfile.id);
+        if (alreadyAdded) {
+            alert('You already have this song in your list!');
+            return;
+        }
+        setQuickAddingId(song.id);
         quickAddMutation.mutate({
-            song_id: quickAddSong.id,
-            song_leader_id: quickAddLeaderId,
-            key: quickAddKey,
-            capo: quickAddCapo,
-            tempo: quickAddTempo || null,
-            notes: quickAddNotes || null,
-            chords: quickAddChords || null,
-            youtube_link: quickAddYoutube || null,
-            drive_link: quickAddDrive || null,
-            chord_reference: quickAddChordRef || null
+            song_id: song.id,
+            song_leader_id: myLeaderProfile.id,
+            key: null,
         });
     };
 
@@ -190,40 +216,16 @@ const Songs = () => {
         setIsModalOpen(true);
     };
 
-    const openCreateModal = () => { resetForm(); setIsModalOpen(true); };
+    const openCreateModal = () => { 
+        resetForm(); 
+        setAutoAddVersion(true);
+        setIsModalOpen(true); 
+    };
 
     const myLeaderProfile = useMemo(() => {
         if (!user || user.role === 'member') return null;
-        return leadersFilterData.find(l => l.name === user.name) || null;
+        return leadersFilterData.find(l => l.user_id === user.id) || null;
     }, [user, leadersFilterData]);
-
-    const openQuickAdd = (song: Song) => {
-        setQuickAddSong(song);
-        const existingVersion = song.versions && song.versions.length > 0 ? song.versions[0] : null;
-        if (existingVersion) {
-            setQuickAddKey(existingVersion.key || 'C');
-            setQuickAddTempo(existingVersion.tempo || '');
-            setQuickAddNotes(existingVersion.notes || '');
-            setQuickAddChords(existingVersion.chords || '');
-            setQuickAddYoutube(existingVersion.youtube_link || '');
-            setQuickAddDrive(existingVersion.drive_link || '');
-            setQuickAddChordRef(existingVersion.chord_reference || '');
-        } else {
-            setQuickAddKey(song.original_key || 'C');
-            setQuickAddTempo('');
-            setQuickAddNotes('');
-            setQuickAddChords('');
-            setQuickAddYoutube('');
-            setQuickAddDrive('');
-            setQuickAddChordRef('');
-        }
-        if (myLeaderProfile) {
-            setQuickAddLeaderId(myLeaderProfile.id.toString());
-        } else {
-            setQuickAddLeaderId(leadersFilterData.length > 0 ? leadersFilterData[0].id.toString() : '');
-        }
-        setIsQuickAddModalOpen(true);
-    };
 
     const filteredSongs = useMemo(() => {
         return songs.filter(s => {
@@ -379,16 +381,28 @@ const Songs = () => {
                                                                 <Link to={`/songs/${song.id}`} className="btn-primary" style={{ padding: '6px 14px', fontSize: 12 }}>
                                                                     View Full Details
                                                                 </Link>
-                                                                {user?.role !== 'member' && (
-                                                                    <button 
-                                                                        onClick={() => openQuickAdd(song)}
-                                                                        className="btn-primary" 
-                                                                        style={{ background: 'rgba(201,168,76,0.1)', color: '#8a6d2f', padding: '6px 14px', fontSize: 12 }}
-                                                                    >
-                                                                        <ArrowDownToLine size={14} style={{ marginRight: 6 }} />
-                                                                        Add to My List
-                                                                    </button>
-                                                                )}
+                                                                {user?.role !== 'member' && (() => {
+                                                    const alreadyAdded = myLeaderProfile && song.versions?.some(v => v.song_leader_id === myLeaderProfile.id);
+                                                    const isBeingAdded = quickAddingId === song.id;
+                                                    const justAdded = quickAddDoneId === song.id;
+                                                    return (
+                                                        <button 
+                                                            onClick={() => handleQuickAdd(song)}
+                                                            className="btn-primary" 
+                                                            disabled={!!alreadyAdded || isBeingAdded}
+                                                            style={{ 
+                                                                background: alreadyAdded ? '#f2eeea' : justAdded ? 'rgba(15,157,88,0.1)' : 'rgba(201,168,76,0.1)', 
+                                                                color: alreadyAdded ? '#b0aba5' : justAdded ? '#0F9D58' : '#8a6d2f', 
+                                                                padding: '6px 14px', 
+                                                                fontSize: 12,
+                                                                cursor: alreadyAdded ? 'not-allowed' : 'pointer'
+                                                            }}
+                                                        >
+                                                            <ArrowDownToLine size={14} style={{ marginRight: 6 }} />
+                                                            {isBeingAdded ? 'Adding...' : alreadyAdded ? 'Already in My List' : justAdded ? '✓ Added!' : 'Add to My Songs'}
+                                                        </button>
+                                                    );
+                                                })()}
                                                                 <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
                                                                     {(user?.role === 'admin' || user?.role === 'pianist' || user?.id === song.user_id) && (
                                                                         <>
@@ -506,10 +520,25 @@ const Songs = () => {
                                             ))}
                                         </div>
                                     </div>
+                                    {/* Auto-add version checkbox for leaders (not shown when editing) */}
+                                    {!editingSong && (user?.role === 'leader') && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'rgba(201,168,76,0.08)', borderRadius: 10, border: '1.5px solid rgba(201,168,76,0.2)', marginBottom: 6 }}>
+                                            <input 
+                                                type="checkbox" 
+                                                id="auto-add-version"
+                                                checked={autoAddVersion}
+                                                onChange={e => setAutoAddVersion(e.target.checked)}
+                                                style={{ width: 16, height: 16, accentColor: '#c9a84c', cursor: 'pointer' }}
+                                            />
+                                            <label htmlFor="auto-add-version" style={{ fontSize: 13, color: '#6a5830', cursor: 'pointer' }}>
+                                                Add this to <strong>my songs</strong> (Key: Unknown — use Pitch Detector later)
+                                            </label>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="modal-footer">
                                     <button type="button" onClick={() => setIsModalOpen(false)} className="btn-ghost">Cancel</button>
-                                    <button type="submit" className="btn-submit">Save</button>
+                                    <button type="submit" className="btn-submit">Save Song</button>
                                 </div>
                             </form>
                         </motion.div>
@@ -517,45 +546,6 @@ const Songs = () => {
                 )}
             </AnimatePresence>
 
-            <AnimatePresence>
-                {isQuickAddModalOpen && (
-                    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setIsQuickAddModalOpen(false)}>
-                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="modal-card">
-                            <div className="modal-header">
-                                <h2 className="modal-title">Add to My List</h2>
-                                <button className="modal-close" onClick={() => setIsQuickAddModalOpen(false)}><X size={16} /></button>
-                            </div>
-                            <form onSubmit={handleQuickAddSubmit}>
-                                <div className="modal-body">
-                                    <p style={{ fontSize: 13, color: '#8a8680', marginBottom: 16 }}>Adding <strong>{quickAddSong?.title}</strong> to your personal library.</p>
-                                    
-                                    {(user?.role === 'admin' || user?.role === 'pianist') && (
-                                        <div className="form-field">
-                                            <label className="form-label">Assign to Leader *</label>
-                                            <select value={quickAddLeaderId} onChange={e => setQuickAddLeaderId(e.target.value)} className="form-input" required>
-                                                {leadersFilterData.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-                                            </select>
-                                        </div>
-                                    )}
-
-                                    <div className="form-field">
-                                        <label className="form-label">Tempo</label>
-                                        <input type="text" value={quickAddTempo} onChange={e => setQuickAddTempo(e.target.value)} className="form-input" />
-                                    </div>
-                                    <div className="form-field">
-                                        <label className="form-label">Notes</label>
-                                        <textarea value={quickAddNotes} onChange={e => setQuickAddNotes(e.target.value)} className="form-input" style={{ minHeight: 80 }} />
-                                    </div>
-                                </div>
-                                <div className="modal-footer">
-                                    <button type="button" onClick={() => setIsQuickAddModalOpen(false)} className="btn-ghost">Cancel</button>
-                                    <button type="submit" className="btn-submit">Add</button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
         </>
     );
 };
