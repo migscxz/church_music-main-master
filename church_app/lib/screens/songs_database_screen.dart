@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/database_helper.dart';
 import '../services/sync_service.dart';
+import '../services/api_service.dart';
+import '../providers/auth_provider.dart';
 import '../utils/constants.dart';
 import '../models/models.dart';
 import 'chord_viewer_screen.dart';
@@ -48,17 +51,34 @@ class _SongsDatabaseScreenState extends State<SongsDatabaseScreen> {
     _leaders = rawLeaders.map((l) => SongLeader.fromJson(l)).toList();
     _uniqueLeaders = ['All Leaders', ..._leaders.map((l) => l.name)];
 
-    // 3. Fetch All Songs
+    // 3. Fetch All Songs, Tags, and Versions
     final rawSongs = await db.getAllSongs();
+    final allSongTags = await db.getAllSongTagsAll();
+    final allSongVersions = await db.getAllSongVersions();
+
+    // Group tags by songId
+    Map<int, List<Tag>> songTagsMap = {};
+    for (var st in allSongTags) {
+      final int songId = st['song_id'];
+      songTagsMap.putIfAbsent(songId, () => []);
+      songTagsMap[songId]!.add(Tag.fromJson(st));
+    }
+
+    // Group versions by songId
+    Map<int, List<Map<String, dynamic>>> songVersionsMap = {};
+    for (var sv in allSongVersions) {
+      final int songId = sv['song_id'];
+      songVersionsMap.putIfAbsent(songId, () => []);
+      songVersionsMap[songId]!.add(sv);
+    }
+
     List<Song> loadedSongs = [];
     Map<int, List<SongVersion>> loadedVersionMap = {};
 
     for (var s in rawSongs) {
       final int songId = s['id'];
 
-      // Fetch Tags for this song
-      final tagMaps = await db.getSongTags(songId);
-      final tags = tagMaps.map((t) => Tag.fromJson(t)).toList();
+      final tags = songTagsMap[songId] ?? [];
 
       final song = Song(
         id: songId,
@@ -68,8 +88,7 @@ class _SongsDatabaseScreenState extends State<SongsDatabaseScreen> {
       );
       loadedSongs.add(song);
 
-      // Fetch versions for this song
-      final versionMaps = await db.getSongVersions(songId);
+      final versionMaps = songVersionsMap[songId] ?? [];
       loadedVersionMap[songId] = versionMaps
           .map(
             (v) => SongVersion(
@@ -83,7 +102,7 @@ class _SongsDatabaseScreenState extends State<SongsDatabaseScreen> {
               chordReference: v['chord_reference'],
               song: song,
               leader: v['leader_id'] != null
-                  ? SongLeader(id: v['leader_id'], name: v['leader_name'] ?? 'Unknown')
+                  ? SongLeader(id: v['leader_id'], name: v['leader_name'] ?? 'Unknown', userId: v['leader_user_id'])
                   : null,
             ),
           )
@@ -144,6 +163,43 @@ class _SongsDatabaseScreenState extends State<SongsDatabaseScreen> {
         _navigateToViewer(versions.first);
       } else {
         _showVersionPicker(song, versions);
+      }
+    }
+  }
+
+  Future<void> _addToMySongs(Song song, SongLeader myLeaderProfile) async {
+    setState(() => _isLoading = true);
+    try {
+      final payload = {
+        'song_id': song.id,
+        'song_leader_id': myLeaderProfile.id,
+        'key': 'Unknown',
+        'chords': null,
+        'tempo': null,
+        'youtube_link': null,
+        'drive_link': null,
+        'chord_reference': null,
+        'notes': null,
+      };
+
+      final response = await ApiService().post('/song-versions', payload);
+      if (response.statusCode == 201) {
+        await SyncService().syncEverything();
+        await _fetchData();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${song.title} added to your list!')),
+          );
+        }
+      } else {
+        throw Exception('Failed to add song');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error adding song: ${e.toString()}')),
+        );
       }
     }
   }
@@ -379,6 +435,24 @@ class _SongsDatabaseScreenState extends State<SongsDatabaseScreen> {
                 final song = _filteredSongs[index];
                 final versions = _songToVersions[song.id] ?? [];
 
+                final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                final user = authProvider.user;
+                final isAdminOrPianist = user?.role == 'admin' || user?.role == 'pianist';
+
+                SongLeader? myLeaderProfile;
+                if (!isAdminOrPianist && user != null) {
+                  try {
+                    myLeaderProfile = _leaders.firstWhere((l) => l.userId == user.id);
+                  } catch (e) {
+                    // Leader profile not found
+                  }
+                }
+
+                final myVersion = myLeaderProfile != null 
+                    ? versions.firstWhere((v) => v.leader?.id == myLeaderProfile!.id, orElse: () => SongVersion(id: -1, key: '')) 
+                    : null;
+                final hasMyVersion = myVersion != null && myVersion.id != -1;
+
                 String subtitle = 'Original Key: ${song.originalKey ?? "N/A"}';
                 if (_selectedLeader != 'All Leaders') {
                   final v = versions.firstWhere(
@@ -410,33 +484,48 @@ class _SongsDatabaseScreenState extends State<SongsDatabaseScreen> {
                       subtitle,
                       style: TextStyle(color: AppColors.textSecondary),
                     ),
-                    trailing: Icon(
-                      versions.isEmpty ? Icons.music_off : Icons.music_note,
-                      color: versions.isEmpty
-                          ? AppColors.textMuted
-                          : AppColors.accentGold,
-                    ),
-                    onTap: () => _onSongTap(song),
+                    trailing: (!isAdminOrPianist && myLeaderProfile != null && !hasMyVersion)
+                        ? IconButton(
+                            icon: Icon(Icons.add_circle_outline, color: AppColors.accentGold),
+                            onPressed: () => _addToMySongs(song, myLeaderProfile!),
+                            tooltip: 'Add to My Songs',
+                          )
+                        : Icon(
+                            versions.isEmpty ? Icons.music_off : Icons.music_note,
+                            color: versions.isEmpty
+                                ? AppColors.textMuted
+                                : AppColors.accentGold,
+                          ),
+                    onTap: () {
+                      if (!isAdminOrPianist && myLeaderProfile != null && !hasMyVersion) {
+                        _addToMySongs(song, myLeaderProfile!);
+                      } else {
+                        _onSongTap(song);
+                      }
+                    },
                   ),
                 );
               },
             ),
           ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.accentGold,
-        tooltip: 'Add New Song',
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => CreateSongScreen()),
-          );
-          if (result == true) {
-            setState(() => _isLoading = true);
-            await SyncService().syncEverything();
-            _fetchData(); // Refresh list from local DB after sync
-          }
-        },
-        child: Icon(Icons.add, color: AppColors.primaryDark),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 90.0),
+        child: FloatingActionButton(
+          backgroundColor: AppColors.accentGold,
+          tooltip: 'Add New Song',
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => CreateSongScreen()),
+            );
+            if (result == true) {
+              setState(() => _isLoading = true);
+              await SyncService().syncEverything();
+              _fetchData(); // Refresh list from local DB after sync
+            }
+          },
+          child: Icon(Icons.add, color: AppColors.primaryDark),
+        ),
       ),
     );
   }

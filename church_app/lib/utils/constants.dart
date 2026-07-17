@@ -25,10 +25,11 @@ class AppColors {
 }
 
 class ApiConstants {
-  // Use 10.0.2.2 for Android Emulator connecting to localhost
-  // Since you are using a physical device (TECNO LJ6), use your local IP:
-  static const String baseUrl =
-      'https://church-music-main-master-1.onrender.com/api';
+  static const String clientEnv = String.fromEnvironment('CLIENT', defaultValue: 'production');
+
+  static const String baseUrl = clientEnv == 'development'
+      ? 'http://192.168.10.247:8000/api'
+      : 'https://church-music-main-master-1.onrender.com/api';
 
   static const String login = '/login';
   static const String user = '/user'; // From sanctum

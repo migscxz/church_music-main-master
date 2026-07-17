@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
+import 'package:provider/provider.dart';
 import '../services/api_service.dart';
+import '../services/sync_service.dart';
+import '../services/database_helper.dart';
+import '../providers/auth_provider.dart';
 import '../utils/constants.dart';
 import '../models/models.dart';
+import 'pitch_detection_screen.dart';
+import 'create_song_screen.dart';
 
 class CreateSetlistScreen extends StatefulWidget {
-  const CreateSetlistScreen({super.key});
+  final Setlist? existingSetlist;
+  const CreateSetlistScreen({super.key, this.existingSetlist});
 
   @override
   _CreateSetlistScreenState createState() => _CreateSetlistScreenState();
@@ -30,31 +36,61 @@ class _CreateSetlistScreenState extends State<CreateSetlistScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.existingSetlist != null) {
+      _title = widget.existingSetlist!.title;
+      _selectedDate = widget.existingSetlist!.date != null 
+          ? DateTime.tryParse(widget.existingSetlist!.date!) 
+          : null;
+      _selectedVersionIds.addAll(
+          widget.existingSetlist!.songVersions.map((v) => v.id));
+    }
     _fetchSongs();
   }
 
   Future<void> _fetchSongs() async {
     try {
-      final response = await _apiService.get('/song-versions');
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        if (mounted) {
-          setState(() {
-            _availableVersions = data
-                .map((json) => SongVersion.fromJson(json))
-                .toList();
+      final db = DatabaseHelper.instance;
+      
+      final rawVersions = await db.getAllSongVersions();
+      final List<SongVersion> loadedVersions = rawVersions.map((v) {
+        return SongVersion(
+          id: v['id'],
+          key: v['key'],
+          chords: v['chords'],
+          tempo: v['tempo'],
+          notes: v['notes'],
+          youtubeLink: v['youtube_link'],
+          driveLink: v['drive_link'],
+          chordReference: v['chord_reference'],
+          song: Song(
+            id: v['song_id'],
+            title: v['song_title'],
+            originalKey: v['song_original_key'],
+          ),
+          leader: v['leader_id'] != null
+              ? SongLeader(
+                  id: v['leader_id'],
+                  name: v['leader_name'] ?? 'Unknown',
+                  userId: v['leader_user_id'] != null ? int.tryParse(v['leader_user_id'].toString()) : null,
+                )
+              : null,
+        );
+      }).toList();
 
-            final leaderNames = _availableVersions
-                .where((v) => v.leader != null)
-                .map((v) => v.leader!.name)
-                .toSet()
-                .toList();
-            leaderNames.sort();
-            _uniqueLeaders = ['All Leaders', ...leaderNames];
+      if (mounted) {
+        setState(() {
+          _availableVersions = loadedVersions;
 
-            _isDataLoading = false;
-          });
-        }
+          final leaderNames = _availableVersions
+              .where((v) => v.leader != null)
+              .map((v) => v.leader!.name)
+              .toSet()
+              .toList();
+          leaderNames.sort();
+          _uniqueLeaders = ['All Leaders', ...leaderNames];
+
+          _isDataLoading = false;
+        });
       }
     } catch (e) {
       if (mounted) setState(() => _isDataLoading = false);
@@ -103,15 +139,17 @@ class _CreateSetlistScreenState extends State<CreateSetlistScreen> {
         'song_version_ids': _selectedVersionIds,
       };
 
-      final response = await _apiService.post('/setlists', payload);
+      final response = widget.existingSetlist == null
+          ? await _apiService.post('/setlists', payload)
+          : await _apiService.put('/setlists/${widget.existingSetlist!.id}', payload);
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 201 || response.statusCode == 200) {
         if (mounted) {
           Navigator.pop(context, true);
         }
       } else {
         throw Exception(
-          'Failed to create setlist (Status: ${response.statusCode})',
+          'Failed to save setlist (Status: ${response.statusCode})',
         );
       }
     } catch (e) {
@@ -127,11 +165,19 @@ class _CreateSetlistScreenState extends State<CreateSetlistScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final user = authProvider.user;
+    final isAdminOrPianist = user?.role == 'admin' || user?.role == 'pianist';
+
     // Filter logic
     final filteredVersions = _availableVersions.where((v) {
+      if (!isAdminOrPianist && user != null && v.leader?.userId != user.id) {
+        return false;
+      }
       final matchesLeader = _leaderFilter == 'All Leaders' || v.leader?.name == _leaderFilter;
       final matchesSearch = _searchQuery.isEmpty || 
-          (v.song?.title.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+          (v.song?.title.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+          (v.leader?.name.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
       return matchesLeader && matchesSearch;
     }).toList();
 
@@ -139,7 +185,7 @@ class _CreateSetlistScreenState extends State<CreateSetlistScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          'New Setlist',
+          widget.existingSetlist != null ? 'Edit Setlist' : 'New Setlist',
           style: TextStyle(
             color: AppColors.textMain,
             fontWeight: FontWeight.bold,
@@ -148,6 +194,29 @@ class _CreateSetlistScreenState extends State<CreateSetlistScreen> {
         backgroundColor: AppColors.surface,
         iconTheme: IconThemeData(color: AppColors.textMain),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add_circle_outline, color: AppColors.accentGold),
+            tooltip: 'Add New Song to Database',
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => CreateSongScreen()),
+              );
+              if (result == true) {
+                setState(() => _isDataLoading = true);
+                // We don't have SyncService imported directly here yet, but we can fetch
+                // the new songs directly since _fetchSongs calls the API. 
+                // But let's trigger a full sync if possible to ensure local DB matches.
+                try {
+                  await SyncService().syncEverything();
+                } catch (_) {}
+                await _fetchSongs();
+              }
+            },
+          ),
+          SizedBox(width: 8),
+        ],
       ),
       body: _isDataLoading
           ? Center(
@@ -161,6 +230,7 @@ class _CreateSetlistScreenState extends State<CreateSetlistScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     TextFormField(
+                      initialValue: _title,
                       decoration: InputDecoration(
                         labelText: 'Setlist Title *',
                         hintText: 'e.g. Sunday Service AM',
@@ -254,30 +324,15 @@ class _CreateSetlistScreenState extends State<CreateSetlistScreen> {
                     ),
                     SizedBox(height: 12),
                     TextField(
-                      onChanged: (val) {
-                        setState(() => _searchQuery = val);
-                      },
-                      style: TextStyle(color: AppColors.textMain),
                       decoration: InputDecoration(
-                        hintText: 'Search songs...',
-                        hintStyle: TextStyle(color: AppColors.textSecondary),
-                        prefixIcon: Icon(Icons.search, color: AppColors.textMuted),
-                        filled: true,
-                        fillColor: AppColors.surface,
-                        contentPadding: EdgeInsets.symmetric(vertical: 0),
+                        labelText: 'Search Songs',
+                        prefixIcon: Icon(Icons.search),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: AppColors.borderLight),
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: AppColors.borderLight),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: AppColors.accentGold),
-                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 0),
                       ),
+                      onChanged: (val) => setState(() => _searchQuery = val),
                     ),
                     SizedBox(height: 12),
                     Expanded(
@@ -307,12 +362,56 @@ class _CreateSetlistScreenState extends State<CreateSetlistScreen> {
                                   fontSize: 15,
                                 ),
                               ),
-                              subtitle: Text(
-                                '${version.leader?.name ?? 'Unknown Leader'} · Key: ${version.key}',
-                                style: TextStyle(
-                                  color: AppColors.textMuted,
-                                  fontSize: 13,
-                                ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        '${version.leader?.name ?? 'Unknown Leader'}',
+                                        style: TextStyle(
+                                          color: AppColors.textMuted,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      SizedBox(width: 8),
+                                      Icon(
+                                        Icons.music_note,
+                                        size: 16,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        version.key,
+                                        style: TextStyle(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (version.key.toLowerCase() == 'unknown')
+                                    TextButton(
+                                      onPressed: () async {
+                                        final result = await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => PitchDetectionScreen(
+                                              targetVersionId: version.id,
+                                              songTitle: version.song?.title,
+                                              leaderName: version.leader?.name,
+                                            ),
+                                          ),
+                                        );
+                                        if (result == true) {
+                                          _fetchSongs(); // Refresh versions
+                                        }
+                                      },
+                                      child: Text(
+                                        'Get Your Key',
+                                        style: TextStyle(color: AppColors.accentGold),
+                                      ),
+                                    ),
+                                ],
                               ),
                               value: isSelected,
                               onChanged: (bool? checked) {
@@ -348,7 +447,7 @@ class _CreateSetlistScreenState extends State<CreateSetlistScreen> {
                                 color: AppColors.accentGold,
                               )
                             : Text(
-                                'CREATE SETLIST',
+                                widget.existingSetlist != null ? 'UPDATE SETLIST' : 'CREATE SETLIST',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1.2,

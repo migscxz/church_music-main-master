@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../utils/constants.dart';
 import '../utils/chord_transposer.dart';
+import 'pitch_detection_screen.dart';
 import '../utils/chord_dictionary.dart';
 import 'package:flutter_guitar_tabs/flutter_guitar_tabs.dart';
 
@@ -134,14 +135,43 @@ class _ChordViewerScreenState extends State<ChordViewerScreen> {
                     });
                   }
                 },
-                items: ChordTransposer.keys.map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
+                items: [
+                  if (!ChordTransposer.keys.contains(_targetKey))
+                    DropdownMenuItem<String>(
+                      value: _targetKey,
+                      child: Text(_targetKey),
+                    ),
+                  ...ChordTransposer.keys.map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  })
+                ],
               ),
             ),
+          ),
+          IconButton(
+            icon: Icon(Icons.mic),
+            onPressed: () async {
+              final newKey = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PitchDetectionScreen(
+                    targetVersionId: widget.songVersion.id,
+                    songTitle: widget.songVersion.song?.title,
+                    leaderName: widget.songVersion.leader?.name,
+                  ),
+                ),
+              );
+              
+              if (newKey != null && newKey is String && newKey.isNotEmpty) {
+                setState(() {
+                  _targetKey = newKey;
+                });
+              }
+            },
+            tooltip: 'Detect Key',
           ),
           IconButton(
             icon: Icon(Icons.remove_circle_outline),

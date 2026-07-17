@@ -17,19 +17,19 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    SongsDatabaseScreen(),
-    const PitchDetectionScreen(),
-    const ScheduleScreen(),
-  ];
+  // Removed static _screens list
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        children: [
+          const HomeScreen(),
+          SongsDatabaseScreen(),
+          _currentIndex == 2 ? const PitchDetectionScreen() : const SizedBox.shrink(),
+          const ScheduleScreen(),
+        ],
       ),
       extendBody: true, // Allows body to extend behind the bottom nav bar
       bottomNavigationBar: ClipRRect(

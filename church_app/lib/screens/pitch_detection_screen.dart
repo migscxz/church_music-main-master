@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
 import '../services/pitch_detector_service.dart';
+import '../services/api_service.dart';
 import '../utils/constants.dart';
 import '../utils/key_estimator.dart';
 
 class PitchDetectionScreen extends StatefulWidget {
-  const PitchDetectionScreen({super.key});
+  final int? targetVersionId;
+  final String? songTitle;
+  final String? leaderName;
+
+  const PitchDetectionScreen({
+    super.key,
+    this.targetVersionId,
+    this.songTitle,
+    this.leaderName,
+  });
 
   @override
   _PitchDetectionScreenState createState() => _PitchDetectionScreenState();
@@ -18,6 +28,7 @@ class _PitchDetectionScreenState extends State<PitchDetectionScreen> {
 
   final Map<String, int> _noteHistogram = {};
   List<KeyEstimate> _topEstimates = [];
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -56,6 +67,31 @@ class _PitchDetectionScreenState extends State<PitchDetectionScreen> {
           _errorMessage = e.toString();
           _isListening = false;
         });
+      }
+    }
+  }
+
+  Future<void> _saveKey(String key) async {
+    if (widget.targetVersionId == null) return;
+    setState(() => _isSaving = true);
+    
+    try {
+      final response = await ApiService().put('/song-versions/${widget.targetVersionId}', {'key': key});
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Key "$key" saved successfully!')));
+          Navigator.pop(context, key); // return the key string
+        }
+      } else {
+        throw Exception('Failed to save key: ${response.body}');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error saving key: $e')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
       }
     }
   }
@@ -249,6 +285,18 @@ class _PitchDetectionScreenState extends State<PitchDetectionScreen> {
                             'Confidence: $matchPct%',
                             style: TextStyle(color: AppColors.textSecondary),
                           ),
+                          trailing: widget.targetVersionId != null && isTop
+                              ? ElevatedButton(
+                                  onPressed: _isSaving ? null : () => _saveKey(est.rootNote),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primaryDark,
+                                    foregroundColor: AppColors.accentGold,
+                                  ),
+                                  child: _isSaving 
+                                    ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accentGold))
+                                    : Text('SAVE'),
+                                )
+                              : null,
                         ),
                       );
                     },

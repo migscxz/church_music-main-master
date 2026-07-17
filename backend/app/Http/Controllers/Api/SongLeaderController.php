@@ -21,6 +21,7 @@ class SongLeaderController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'user_id' => 'nullable|exists:users,id',
         ]);
 
         $leader = SongLeader::create($validated);
@@ -43,6 +44,7 @@ class SongLeaderController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'user_id' => 'nullable|exists:users,id',
         ]);
 
         $leader->update($validated);

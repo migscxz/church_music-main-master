@@ -19,7 +19,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 4,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -32,6 +32,27 @@ class DatabaseHelper {
           id INTEGER PRIMARY KEY,
           month_year TEXT NOT NULL,
           weeks_json TEXT
+        )
+      ''');
+    }
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE song_leaders ADD COLUMN user_id INTEGER');
+    }
+    if (oldVersion < 4) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS setlists (
+          id INTEGER PRIMARY KEY,
+          title TEXT NOT NULL,
+          date TEXT
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS setlist_song_version (
+          setlist_id INTEGER,
+          song_version_id INTEGER,
+          PRIMARY KEY (setlist_id, song_version_id),
+          FOREIGN KEY (setlist_id) REFERENCES setlists (id),
+          FOREIGN KEY (song_version_id) REFERENCES song_versions (id)
         )
       ''');
     }
@@ -57,7 +78,8 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE song_leaders (
         id INTEGER PRIMARY KEY,
-        name TEXT NOT NULL
+        name TEXT NOT NULL,
+        user_id INTEGER
       )
     ''');
 
@@ -173,6 +195,7 @@ class DatabaseHelper {
       batch.insert('song_leaders', {
         'id': item['id'],
         'name': item['name'],
+        'user_id': item['user_id'],
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
     await batch.commit(noResult: true);
@@ -253,7 +276,7 @@ class DatabaseHelper {
     final db = await instance.database;
     return await db.rawQuery(
       '''
-      SELECT sv.*, s.title as song_title, s.original_key as song_original_key, sl.name as leader_name
+      SELECT sv.*, s.title as song_title, s.original_key as song_original_key, sl.name as leader_name, sl.user_id as leader_user_id
       FROM song_versions sv
       JOIN setlist_song_version ssv ON sv.id = ssv.song_version_id
       JOIN songs s ON sv.song_id = s.id
@@ -267,8 +290,27 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> getAllSongVersions() async {
     final db = await instance.database;
     return await db.rawQuery('''
-      SELECT sv.*, s.title as song_title, s.original_key as song_original_key, sl.name as leader_name
+      SELECT sv.*, s.title as song_title, s.original_key as song_original_key, sl.name as leader_name, sl.user_id as leader_user_id
       FROM song_versions sv
+      JOIN songs s ON sv.song_id = s.id
+      LEFT JOIN song_leaders sl ON sv.leader_id = sl.id
+    ''');
+  }
+
+  Future<List<Map<String, dynamic>>> getAllSongTagsAll() async {
+    final db = await instance.database;
+    return await db.rawQuery('''
+      SELECT st.song_id, t.* FROM tags t
+      JOIN song_tag st ON t.id = st.tag_id
+    ''');
+  }
+
+  Future<List<Map<String, dynamic>>> getAllSetlistVersionsAll() async {
+    final db = await instance.database;
+    return await db.rawQuery('''
+      SELECT ssv.setlist_id, sv.*, s.title as song_title, s.original_key as song_original_key, sl.name as leader_name, sl.user_id as leader_user_id
+      FROM song_versions sv
+      JOIN setlist_song_version ssv ON sv.id = ssv.song_version_id
       JOIN songs s ON sv.song_id = s.id
       LEFT JOIN song_leaders sl ON sv.leader_id = sl.id
     ''');
@@ -295,7 +337,7 @@ class DatabaseHelper {
     final db = await instance.database;
     return await db.rawQuery(
       '''
-      SELECT sv.*, sl.name as leader_name
+      SELECT sv.*, sl.name as leader_name, sl.user_id as leader_user_id
       FROM song_versions sv
       LEFT JOIN song_leaders sl ON sv.leader_id = sl.id
       WHERE sv.song_id = ?

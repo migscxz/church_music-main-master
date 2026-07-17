@@ -1,15 +1,20 @@
 class SongLeader {
   final int id;
   final String name;
+  final int? userId;
 
-  SongLeader({required this.id, required this.name});
+  SongLeader({required this.id, required this.name, this.userId});
 
   factory SongLeader.fromJson(Map<String, dynamic> json) {
-    return SongLeader(id: json['id'], name: json['name']);
+    return SongLeader(
+      id: json['id'],
+      name: json['name'],
+      userId: json['user_id'],
+    );
   }
 
   Map<String, dynamic> toMap() {
-    return {'id': id, 'name': name};
+    return {'id': id, 'name': name, 'user_id': userId};
   }
 }
 

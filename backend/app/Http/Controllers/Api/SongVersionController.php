@@ -33,7 +33,7 @@ class SongVersionController extends Controller
         ]);
 
         if (!in_array($user->role, ['admin', 'pianist'])) {
-            $leader = \App\Models\SongLeader::where('name', $user->name)->first();
+            $leader = \App\Models\SongLeader::where('user_id', $user->id)->first();
             if (!$leader || $leader->id != $validated['song_leader_id']) {
                 return response()->json(['message' => 'Unauthorized to create version for this leader'], 403);
             }
@@ -59,7 +59,7 @@ class SongVersionController extends Controller
         }
 
         if (!in_array($user->role, ['admin', 'pianist'])) {
-            $leader = \App\Models\SongLeader::where('name', $user->name)->first();
+            $leader = \App\Models\SongLeader::where('user_id', $user->id)->first();
             if (!$leader || $leader->id != $version->song_leader_id) {
                 return response()->json(['message' => 'Unauthorized to edit this version'], 403);
             }
@@ -91,7 +91,7 @@ class SongVersionController extends Controller
         }
 
         if (!in_array($user->role, ['admin', 'pianist'])) {
-            $leader = \App\Models\SongLeader::where('name', $user->name)->first();
+            $leader = \App\Models\SongLeader::where('user_id', $user->id)->first();
             if (!$leader || $leader->id != $version->song_leader_id) {
                 return response()->json(['message' => 'Unauthorized to delete this version'], 403);
             }
