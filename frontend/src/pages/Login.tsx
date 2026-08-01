@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Lock, Mail, ArrowRight } from 'lucide-react';
+import { Lock, Mail, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Preloader from '../components/Preloader';
 
@@ -11,6 +11,7 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const { login } = useAuth();
     const navigate = useNavigate();
@@ -231,6 +232,30 @@ const Login = () => {
                     color: #555;
                 }
 
+                .form-input.has-toggle {
+                    padding-right: 46px;
+                }
+
+                .input-toggle-btn {
+                    position: absolute;
+                    right: 16px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background: transparent;
+                    border: none;
+                    color: #6b6865;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 0;
+                    transition: color 0.2s;
+                }
+
+                .input-toggle-btn:hover {
+                    color: var(--accent);
+                }
+
                 .btn-submit {
                     width: 100%;
                     padding: 16px;
@@ -344,13 +369,21 @@ const Login = () => {
                                 <div className="input-wrapper">
                                     <Lock size={18} className="input-icon" />
                                     <input
-                                        type="password"
-                                        className="form-input"
+                                        type={showPassword ? "text" : "password"}
+                                        className="form-input has-toggle"
                                         placeholder="Enter your password"
                                         value={password}
                                         onChange={e => setPassword(e.target.value)}
                                         required
                                     />
+                                    <button 
+                                        type="button" 
+                                        className="input-toggle-btn" 
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        title={showPassword ? "Hide password" : "Show password"}
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
                                 </div>
                             </div>
 
