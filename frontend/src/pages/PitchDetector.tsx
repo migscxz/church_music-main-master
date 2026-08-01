@@ -84,7 +84,7 @@ const PitchDetector = () => {
                 }
                 .pitch-header p {
                     color: var(--text-inverse-muted, #737373);
-                    font-size: 15px;
+                    font-size: 17px;
                     margin: 0;
                 }
                 .mic-container {
@@ -124,7 +124,7 @@ const PitchDetector = () => {
                 }
                 .listening-text {
                     text-align: center;
-                    font-size: 14px;
+                    font-size: 16px;
                     font-weight: 500;
                     margin-bottom: 24px;
                 }
@@ -142,7 +142,7 @@ const PitchDetector = () => {
                     background: transparent;
                     border: none;
                     color: var(--text-inverse-muted, #737373);
-                    font-size: 14px;
+                    font-size: 16px;
                     font-weight: 500;
                     cursor: pointer;
                     transition: color 0.2s;
@@ -153,11 +153,11 @@ const PitchDetector = () => {
                 .error-msg {
                     color: #e53e3e;
                     text-align: center;
-                    font-size: 14px;
+                    font-size: 16px;
                     margin-bottom: 24px;
                 }
                 .estimates-title {
-                    font-size: 18px;
+                    font-size: 20px;
                     font-weight: 600;
                     color: var(--text-inverse);
                     margin-bottom: 16px;
@@ -194,7 +194,7 @@ const PitchDetector = () => {
                 }
                 .estimate-info h4 {
                     margin: 0 0 4px 0;
-                    font-size: 16px;
+                    font-size: 18px;
                     font-weight: 600;
                     color: var(--text-primary);
                 }
@@ -203,7 +203,7 @@ const PitchDetector = () => {
                 }
                 .estimate-info p {
                     margin: 0;
-                    font-size: 13px;
+                    font-size: 15px;
                     color: var(--text-muted);
                 }
                 .estimate-card.top-match .estimate-info p {

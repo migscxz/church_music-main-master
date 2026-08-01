@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface SongLeader {
     id: number;
     name: string;
+    user_id?: number | null;
 }
 
 const SongLeaders = () => {
@@ -15,6 +16,7 @@ const SongLeaders = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingLeader, setEditingLeader] = useState<SongLeader | null>(null);
     const [name, setName] = useState('');
+    const [userId, setUserId] = useState<number | ''>('');
     const { user } = useAuth();
     const isAdmin = user?.role === 'admin';
 
@@ -24,8 +26,13 @@ const SongLeaders = () => {
         queryFn: () => api.get('/song-leaders').then(res => res.data)
     });
 
+    const { data: users = [] } = useQuery<any[]>({
+        queryKey: ['users'],
+        queryFn: () => api.get('/users').then(res => res.data)
+    });
+
     const saveMutation = useMutation({
-        mutationFn: async (payload: { name: string }) => {
+        mutationFn: async (payload: { name: string, user_id: number | null }) => {
             if (editingLeader) {
                 return api.put(`/song-leaders/${editingLeader.id}`, payload);
             } else {
@@ -37,6 +44,7 @@ const SongLeaders = () => {
             queryClient.invalidateQueries({ queryKey: ['songs'] });
             setIsModalOpen(false);
             setName('');
+            setUserId('');
             setEditingLeader(null);
         },
         onError: (error) => console.error('Error saving leader:', error)
@@ -53,7 +61,7 @@ const SongLeaders = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        saveMutation.mutate({ name });
+        saveMutation.mutate({ name, user_id: userId === '' ? null : userId });
     };
 
     const handleDelete = async (id: number) => {
@@ -62,8 +70,8 @@ const SongLeaders = () => {
         }
     };
 
-    const openEditModal = (leader: SongLeader) => { setEditingLeader(leader); setName(leader.name); setIsModalOpen(true); };
-    const openCreateModal = () => { setEditingLeader(null); setName(''); setIsModalOpen(true); };
+    const openEditModal = (leader: SongLeader) => { setEditingLeader(leader); setName(leader.name); setUserId(leader.user_id || ''); setIsModalOpen(true); };
+    const openCreateModal = () => { setEditingLeader(null); setName(''); setUserId(''); setIsModalOpen(true); };
 
     if (loadingLeaders) return (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300, gap: 12 }}>
@@ -118,7 +126,7 @@ const SongLeaders = () => {
                 }
 
                 .page-title-wrap p {
-                    font-size: 13.5px;
+                    font-size: 15.5px;
                     color: #8a8680;
                     margin: 0;
                 }
@@ -133,7 +141,7 @@ const SongLeaders = () => {
                     border-radius: 10px;
                     padding: 10px 18px;
                     font-family: 'DM Sans', sans-serif;
-                    font-size: 13.5px;
+                    font-size: 15.5px;
                     font-weight: 500;
                     cursor: pointer;
                     transition: background 0.15s, transform 0.1s;
@@ -186,7 +194,7 @@ const SongLeaders = () => {
                 }
 
                 .leader-name {
-                    font-size: 15.5px;
+                    font-size: 17.5px;
                     font-weight: 600;
                     color: #1a1814;
                     flex: 1;
@@ -240,11 +248,11 @@ const SongLeaders = () => {
                     margin: 0 0 6px 0;
                 }
 
-                .leaders-empty p { font-size: 13.5px; color: var(--text-inverse-muted); margin: 0; }
+                .leaders-empty p { font-size: 15.5px; color: var(--text-inverse-muted); margin: 0; }
 
                 /* ── COUNT BAR ── */
                 .count-bar { margin-bottom: 14px; padding-left: 2px; }
-                .count-text { font-size: 12.5px; color: #9a9590; font-weight: 500; letter-spacing: 0.02em; }
+                .count-text { font-size: 14.5px; color: #9a9590; font-weight: 500; letter-spacing: 0.02em; }
                 .count-accent { color: var(--accent); font-weight: 600; }
 
                 /* ── MODAL ── */
@@ -293,7 +301,7 @@ const SongLeaders = () => {
 
                 .form-label {
                     display: block;
-                    font-size: 11.5px; font-weight: 700;
+                    font-size: 13.5px; font-weight: 700;
                     color: #5a5550; margin-bottom: 7px;
                     letter-spacing: 0.06em; text-transform: uppercase;
                 }
@@ -304,7 +312,7 @@ const SongLeaders = () => {
                     border-radius: 10px;
                     padding: 11px 14px;
                     font-family: 'DM Sans', sans-serif;
-                    font-size: 14px; color: #1a1814;
+                    font-size: 16px; color: #1a1814;
                     outline: none; background: var(--bg-card);
                     transition: border-color 0.15s, box-shadow 0.15s;
                 }
@@ -321,7 +329,7 @@ const SongLeaders = () => {
 
                 .btn-ghost {
                     padding: 9px 18px; border-radius: 10px;
-                    font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 500;
+                    font-family: 'DM Sans', sans-serif; font-size: 15.5px; font-weight: 500;
                     background: #ede9e4; color: #5a5550;
                     border: none; cursor: pointer; transition: background 0.14s;
                 }
@@ -330,7 +338,7 @@ const SongLeaders = () => {
 
                 .btn-submit {
                     padding: 9px 20px; border-radius: 10px;
-                    font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 500;
+                    font-family: 'DM Sans', sans-serif; font-size: 15.5px; font-weight: 500;
                     background: var(--bg-surface); color: var(--text-primary);
                     border: none; cursor: pointer; transition: background 0.14s;
                     position: relative; overflow: hidden;
@@ -443,15 +451,35 @@ const SongLeaders = () => {
                             </div>
                             <form onSubmit={handleSubmit}>
                                 <div className="modal-body">
-                                    <label htmlFor="name" className="form-label">Name</label>
-                                    <input
-                                        type="text" id="name"
-                                        value={name}
-                                        onChange={e => setName(e.target.value)}
-                                        className="form-input"
-                                        placeholder="e.g. John Dela Cruz"
-                                        autoFocus required
-                                    />
+                                    <div style={{ marginBottom: 16 }}>
+                                        <label htmlFor="name" className="form-label">Name</label>
+                                        <input
+                                            type="text" id="name"
+                                            value={name}
+                                            onChange={e => setName(e.target.value)}
+                                            className="form-input"
+                                            placeholder="e.g. John Dela Cruz"
+                                            autoFocus required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="user_id" className="form-label">Link to User Account (Optional)</label>
+                                        <select
+                                            id="user_id"
+                                            value={userId}
+                                            onChange={e => setUserId(e.target.value ? Number(e.target.value) : '')}
+                                            className="form-input"
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <option value="">-- No User Linked --</option>
+                                            {users.map((u: any) => (
+                                                <option key={u.id} value={u.id}>{u.name} ({u.role})</option>
+                                            ))}
+                                        </select>
+                                        <p style={{ fontSize: 12, color: 'var(--text-inverse-muted)', marginTop: 4 }}>
+                                            Linking a user account allows them to use the "Add to My Songs" feature.
+                                        </p>
+                                    </div>
                                 </div>
                                 <div className="modal-footer">
                                     <button type="button" onClick={() => setIsModalOpen(false)} className="btn-ghost">Cancel</button>

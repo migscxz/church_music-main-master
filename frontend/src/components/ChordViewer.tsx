@@ -16,14 +16,14 @@ interface ChordViewerProps {
 }
 
 const ChordViewer = ({ originalKey, originalCapo = 0, chords, songTitle, leaderName, tempo, youtubeLink }: ChordViewerProps) => {
-    const [targetKey, setTargetKey] = useState(originalKey || 'C');
+    const [targetKey, setTargetKey] = useState(originalKey || '');
     const [capo, setCapo] = useState<number>(originalCapo);
     const [layoutCols, setLayoutCols] = useState(1);
     const [fontSize, setFontSize] = useState(14);
     
     // Practice Mode State
     const [isPracticeMode, setIsPracticeMode] = useState(false);
-    const [practiceKey, setPracticeKey] = useState(originalKey || 'C');
+    const [practiceKey, setPracticeKey] = useState(originalKey || '');
     const [isPlaying, setIsPlaying] = useState(false);
     const [scrollSpeed, setScrollSpeed] = useState(5);
     const [diagramMode, setDiagramMode] = useState<'off' | 'guitar' | 'piano'>('off');
@@ -444,8 +444,11 @@ ${chordsContent}
                         <select
                             value={targetKey}
                             onChange={(e) => setTargetKey(e.target.value)}
-                            className="border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-blue-500 bg-white min-w-[60px]"
+                            className={`border rounded-lg px-2 py-1 bg-white min-w-[60px] ${!originalKey ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'}`}
+                            disabled={!originalKey}
+                            title={!originalKey ? 'Set a key for this version first to transpose' : 'Transpose key'}
                         >
+                            {!originalKey && <option value="">Unknown</option>}
                             {ALL_KEYS.map(k => (
                                 <option key={k} value={k}>{k}</option>
                             ))}

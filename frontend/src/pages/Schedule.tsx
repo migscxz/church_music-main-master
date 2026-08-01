@@ -213,7 +213,7 @@ const SchedulePage = () => {
                     font-weight: 700; color: #0f1117; margin: 0 0 6px 0;
                 }
                 .hero-sub {
-                    font-size: 13.5px; color: #8a8680; margin: 0;
+                    font-size: 15.5px; color: #8a8680; margin: 0;
                 }
                 .btn-add {
                     display: inline-flex; align-items: center; gap: 8px;
@@ -250,7 +250,7 @@ const SchedulePage = () => {
                 
                 .month-header {
                     font-family: 'Cormorant Garamond', serif;
-                    font-size: 18px;
+                    font-size: 20px;
                     font-weight: 700;
                     background: #ede9e4 !important;
                     text-transform: uppercase;
@@ -263,7 +263,7 @@ const SchedulePage = () => {
                     background: var(--bg-card-alt);
                     white-space: nowrap;
                     text-transform: uppercase;
-                    font-size: 11px;
+                    font-size: 13px;
                     letter-spacing: 0.05em;
                     width: 180px;
                 }
@@ -276,7 +276,7 @@ const SchedulePage = () => {
 
                 .date-header {
                     text-align: center;
-                    font-size: 14px;
+                    font-size: 16px;
                 }
                 
                 .admin-actions {
@@ -308,7 +308,7 @@ const SchedulePage = () => {
                 .modal-footer { padding: 16px 24px; border-top: 1px solid #f0ece8; background: var(--bg-card-alt); display: flex; justify-content: flex-end; gap: 10px; }
                 
                 .form-field { margin-bottom: 16px; }
-                .form-label { display: block; font-size: 11px; font-weight: 700; color: #5a5550; text-transform: uppercase; margin-bottom: 6px; }
+                .form-label { display: block; font-size: 13px; font-weight: 700; color: #5a5550; text-transform: uppercase; margin-bottom: 6px; }
                 .form-input { width: 100%; border: 1.5px solid  var(--border-color); border-radius: 10px; padding: 10px 14px; outline: none; transition: border-color 0.2s; font-family: inherit; }
                 .form-input:focus { border-color: var(--accent); }
                 
@@ -328,13 +328,13 @@ const SchedulePage = () => {
                 }
                 .edit-grid th {
                     background: var(--bg-card-alt);
-                    font-size: 13px;
+                    font-size: 15px;
                     font-weight: 600;
                     text-align: center;
                 }
                 .edit-grid .role-col {
                     background: var(--bg-card-alt);
-                    font-size: 11px;
+                    font-size: 13px;
                     font-weight: 600;
                     text-transform: uppercase;
                     color: #6a6560;
@@ -347,7 +347,7 @@ const SchedulePage = () => {
                     border: 1px solid  var(--border-color);
                     background: var(--bg-card);
                     font-family: inherit;
-                    font-size: 13px;
+                    font-size: 15px;
                 }
             `}</style>
 

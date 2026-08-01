@@ -120,9 +120,6 @@ const Layout = () => {
                 .brand-icon-wrap {
                     width: 36px;
                     height: 36px;
-                    border-radius: 9px;
-                    background: var(--accent-muted);
-                    border: 1px solid rgba(201,168,76,0.3);
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -137,7 +134,7 @@ const Layout = () => {
 
                 .brand-title {
                     font-family: 'Cormorant Garamond', Georgia, serif;
-                    font-size: 15px;
+                    font-size: 17px;
                     font-weight: 700;
                     color: var(--text-primary);
                     line-height: 1.15;
@@ -146,7 +143,7 @@ const Layout = () => {
                 }
 
                 .brand-subtitle {
-                    font-size: 10px;
+                    font-size: 12px;
                     font-weight: 500;
                     color: var(--text-muted);
                     letter-spacing: 0.1em;
@@ -191,7 +188,7 @@ const Layout = () => {
 
                 /* ── NAV SECTION LABEL ── */
                 .nav-section-label {
-                    font-size: 10px;
+                    font-size: 12px;
                     font-weight: 600;
                     letter-spacing: 0.14em;
                     text-transform: uppercase;
@@ -266,14 +263,14 @@ const Layout = () => {
                 }
 
                 .nav-link-name {
-                    font-size: 13px;
+                    font-size: 15px;
                     font-weight: 500;
                     display: block;
                     line-height: 1;
                     margin-bottom: 2px;
                 }
 
-                .nav-link-desc { font-size: 11px; opacity: 0.55; line-height: 1; }
+                .nav-link-desc { font-size: 13px; opacity: 0.55; line-height: 1; }
 
                 .nav-link .chevron {
                     opacity: 0;
@@ -294,7 +291,7 @@ const Layout = () => {
                     transform: translateY(-50%);
                     background: #1e2130;
                     color: var(--text-primary);
-                    font-size: 12px;
+                    font-size: 14px;
                     font-weight: 500;
                     padding: 6px 11px;
                     border-radius: 7px;
@@ -355,7 +352,7 @@ const Layout = () => {
                 }
 
                 .mobile-brand { display: flex; align-items: center; gap: 10px; color: var(--text-primary); }
-                .mobile-brand-name { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 700; letter-spacing: 0.02em; }
+                .mobile-brand-name { font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 700; letter-spacing: 0.02em; }
 
                 .mobile-menu-btn {
                     background: var(--hover-bg);
@@ -383,7 +380,7 @@ const Layout = () => {
                     flex-shrink: 0;
                 }
 
-                .topbar-breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #999; font-weight: 500; }
+                .topbar-breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 15px; color: #999; font-weight: 500; }
                 .topbar-breadcrumb .current { color: #1a1a1a; font-weight: 600; }
                 .topbar-dot { width: 3px; height: 3px; background: #d0ccc7; border-radius: 50%; }
                 .topbar-actions { display: flex; align-items: center; gap: 10px; }
@@ -392,7 +389,7 @@ const Layout = () => {
                     background: var(--accent-muted);
                     border: 1px solid rgba(201,168,76,0.3);
                     color: #8a6d2f;
-                    font-size: 11px; font-weight: 600;
+                    font-size: 12px; font-weight: 600;
                     letter-spacing: 0.08em; text-transform: uppercase;
                     padding: 4px 10px; border-radius: 20px;
                 }
@@ -413,7 +410,7 @@ const Layout = () => {
             <div className="mobile-header">
                 <div className="mobile-brand">
                     <div className="brand-icon-wrap" style={{ width: 32, height: 32 }}>
-                        <Music size={16} color="#c9a84c" />
+                        <img src="/final_wam.png" alt="WAM" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                     </div>
                     <span className="mobile-brand-name">Worship Ministry</span>
                 </div>
@@ -464,7 +461,7 @@ const Layout = () => {
                         {!isCollapsed && (
                             <div className="sidebar-brand-row">
                                 <div className="brand-icon-wrap">
-                                    <Music size={18} color="#c9a84c" />
+                                    <img src="/final_wam.png" alt="WAM" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                                 </div>
                                 <AnimatePresence mode="wait">
                                     <motion.div 
@@ -475,7 +472,7 @@ const Layout = () => {
                                         className="brand-text"
                                     >
                                         <p className="brand-title">Worship &amp; Music</p>
-                                        <p className="brand-subtitle">WAM</p>
+                                        <p className="brand-subtitle" style={{ color: 'var(--accent)', fontWeight: 600 }}>WAM Team</p>
                                     </motion.div>
                                 </AnimatePresence>
                             </div>
@@ -548,8 +545,8 @@ const Layout = () => {
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
                                     >
-                                        <p className="sidebar-footer-text" style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '4px' }}>{user?.name}</p>
-                                        <p className="sidebar-footer-text" style={{ fontSize: '10px', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>{user?.role}</p>
+                                        <p className="sidebar-footer-text" style={{ fontSize: '15px', color: 'var(--text-primary)', marginBottom: '4px' }}>{user?.name}</p>
+                                        <p className="sidebar-footer-text" style={{ fontSize: '12px', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>{user?.role}</p>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -622,7 +619,7 @@ const MobileSidebarContents = ({
                 opacity: 0.5;
             }
             .mob-brand { display: flex; align-items: center; gap: 10px; }
-            .mob-brand-title { font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 700; color: #f0ede8; margin: 0; }
+            .mob-brand-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 700; color: #f0ede8; margin: 0; }
             .mob-close {
                 width: 30px; height: 30px; border-radius: 7px;
                 background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
@@ -641,15 +638,15 @@ const MobileSidebarContents = ({
             .mob-nav-link.active { background: rgba(201,168,76,0.12); color: #c9a84c; border-color: rgba(201,168,76,0.2); }
             .mob-icon { width: 34px; height: 34px; border-radius: 7px; background: rgba(255,255,255,0.03); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
             .mob-nav-link.active .mob-icon { background: rgba(201,168,76,0.15); }
-            .mob-name { font-size: 13.5px; font-weight: 500; display: block; line-height: 1; margin-bottom: 2px; }
-            .mob-desc { font-size: 11px; opacity: 0.55; line-height: 1; }
-            .mob-footer { padding: 16px 18px; margin-top: auto; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11px; color: rgba(240,237,232,0.3); letter-spacing: 0.05em; }
+            .mob-name { font-size: 15px; font-weight: 500; display: block; line-height: 1; margin-bottom: 2px; }
+            .mob-desc { font-size: 13px; opacity: 0.55; line-height: 1; }
+            .mob-footer { padding: 16px 18px; margin-top: auto; border-top: 1px solid rgba(255,255,255,0.06); font-size: 12px; color: rgba(240,237,232,0.3); letter-spacing: 0.05em; }
         `}</style>
 
         <div className="mob-header">
             <div className="mob-brand">
-                <div style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Music size={16} color="#c9a84c" />
+                <div style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img src="/final_wam.png" alt="WAM" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                 </div>
                 <p className="mob-brand-title">Worship Ministry</p>
             </div>

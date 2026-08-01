@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Music, Lock, Mail } from 'lucide-react';
+import { Lock, Mail, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Prism from '../components/ReactBits/Prism/Prism';
 import Preloader from '../components/Preloader';
 
 const Login = () => {
@@ -37,89 +36,140 @@ const Login = () => {
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
                 
-                .login-container {
-                    min-height: 100vh;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    background: #050505;
-                    padding: 20px;
-                    font-family: 'DM Sans', sans-serif;
-                    position: relative;
-                    overflow: hidden;
+                :root {
+                    --sidebar-bg: #0f1117;
+                    --sidebar-border: rgba(255,255,255,0.06);
+                    --accent: #c9a84c;
+                    --accent-muted: rgba(201,168,76,0.15);
+                    --text-primary: #f0ede8;
+                    --text-muted: rgba(240,237,232,0.45);
+                    --text-inverse: #0f1117;
+                    --text-inverse-muted: rgba(15,17,23,0.55);
+                    --hover-bg: rgba(255,255,255,0.04);
+                    --active-bg: rgba(201,168,76,0.12);
+                    --main-bg: #f7f5f2;
+                    --bg-surface: #0f1117;
                 }
 
-                .login-container::before {
-                    content: '';
+                .split-layout {
+                    min-height: 100vh;
+                    display: flex;
+                    background: #050505;
+                    font-family: 'DM Sans', sans-serif;
+                    position: relative;
+                }
+
+                /* ── LEFT PANEL: VIDEO ── */
+                .video-panel {
                     position: absolute;
-                    width: 140%;
-                    height: 140%;
-                    background: radial-gradient(circle, rgba(201,168,76,0.05) 0%, transparent 60%);
-                    top: -20%;
-                    left: -20%;
+                    inset: 0;
+                    z-index: 0;
+                    overflow: hidden;
+                    background: #000;
+                }
+                
+                .video-bg {
+                    position: absolute;
+                    top: 0; left: 0;
+                    width: 100%; height: 100%;
+                    object-fit: cover;
+                    opacity: 0.3; /* darker on mobile so form is visible */
+                }
+
+                .video-overlay {
+                    position: absolute;
+                    inset: 0;
+                    background: rgba(5,5,5,0.7);
                     pointer-events: none;
                 }
 
-                .login-card {
-                    background: rgba(15, 17, 23, 0.96);
-                    backdrop-filter: blur(10px);
-                    -webkit-backdrop-filter: blur(10px);
-                    width: 100%;
-                    max-width: 420px;
-                    border-radius: 24px;
-                    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-                    overflow: hidden;
-                    border: 1px solid var(--sidebar-border);
+                @media (min-width: 900px) {
+                    .video-panel {
+                        position: relative;
+                        display: block;
+                        flex: 1.3;
+                    }
+                    .video-bg {
+                        opacity: 0.9;
+                    }
+                    /* Subtle overlay to blend edges on desktop */
+                    .video-overlay {
+                        background: linear-gradient(to right, transparent, rgba(5,5,5,1));
+                    }
+                }
+
+                /* ── RIGHT PANEL: FORM ── */
+                .form-panel {
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 40px;
+                    background: transparent; /* transparent on mobile so video shows behind */
                     position: relative;
+                    z-index: 10;
+                    min-height: 100vh;
+                }
+
+                @media (min-width: 900px) {
+                    .form-panel {
+                        background: #050505;
+                    }
+                }
+
+                .login-card {
+                    width: 100%;
+                    max-width: 400px;
                     z-index: 10;
                 }
 
                 .login-header {
-                    background: var(--bg-surface);
-                    padding: 40px 32px 30px;
                     text-align: center;
-                    position: relative;
+                    margin-bottom: 40px;
                 }
 
-                .login-header::after {
-                    content: '';
-                    position: absolute;
-                    bottom: 0;
-                    left: 0;
-                    right: 0;
-                    height: 1px;
-                    background: linear-gradient(90deg, transparent, rgba(201,168,76,0.6), transparent);
-                }
-
-                .brand-icon {
-                    width: 64px;
-                    height: 64px;
-                    background: var(--accent-muted);
-                    border: 1px solid var(--accent);
-                    border-radius: 16px;
+                .brand-icon-wrapper {
+                    width: 80px;
+                    height: 80px;
+                    margin: 0 auto 24px;
+                    border-radius: 50%;
+                    padding: 3px;
+                    background: linear-gradient(135deg, var(--accent), transparent 60%, var(--accent));
+                    box-shadow: 0 0 20px var(--accent-muted);
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    margin: 0 auto 16px;
+                    animation: subtlePulse 4s infinite alternate ease-in-out;
+                }
+
+                @keyframes subtlePulse {
+                    0% { box-shadow: 0 0 15px var(--accent-muted); }
+                    100% { box-shadow: 0 0 30px rgba(201,168,76,0.3); }
+                }
+
+                .brand-icon {
+                    width: 100%;
+                    height: 100%;
+                    background: #000;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    overflow: hidden;
                 }
 
                 .login-title {
                     font-family: 'Cormorant Garamond', serif;
-                    font-size: 28px;
+                    font-size: 34px;
                     font-weight: 700;
                     color: #fff;
-                    margin: 0 0 6px 0;
+                    margin: 0 0 8px 0;
                 }
 
                 .login-subtitle {
-                    font-size: 14px;
+                    font-size: 16px;
                     color: #a09d98;
                     margin: 0;
-                }
-
-                .login-body {
-                    padding: 32px;
-                    background: rgba(255, 255, 255, 0.02);
                 }
 
                 .error-banner {
@@ -127,22 +177,22 @@ const Login = () => {
                     border-left: 3px solid #dc2626;
                     color: #991b1b;
                     padding: 12px 16px;
-                    font-size: 13.5px;
+                    font-size: 15px;
                     margin-bottom: 24px;
                     border-radius: 4px;
                 }
 
                 .form-group {
-                    margin-bottom: 20px;
+                    margin-bottom: 24px;
                 }
 
                 .form-label {
                     display: block;
-                    font-size: 12.5px;
+                    font-size: 13px;
                     font-weight: 600;
-                    color: #5a5550;
-                    margin-bottom: 8px;
-                    letter-spacing: 0.04em;
+                    color: #8c8884;
+                    margin-bottom: 10px;
+                    letter-spacing: 0.06em;
                     text-transform: uppercase;
                 }
 
@@ -152,109 +202,117 @@ const Login = () => {
 
                 .input-icon {
                     position: absolute;
-                    left: 14px;
+                    left: 16px;
                     top: 50%;
                     transform: translateY(-50%);
-                    color: #b0aba5;
+                    color: #6b6865;
                     pointer-events: none;
                 }
 
                 .form-input {
                     width: 100%;
-                    padding: 12px 14px 12px 42px;
-                    border: 1.5px solid rgba(255, 255, 255, 0.1);
+                    padding: 14px 16px 14px 46px;
+                    border: 1px solid rgba(255, 255, 255, 0.08);
                     border-radius: 12px;
                     font-family: inherit;
-                    font-size: 15px;
+                    font-size: 16px;
                     color: #fff;
-                    background: rgba(255, 255, 255, 0.03);
+                    background: rgba(255, 255, 255, 0.02);
                     outline: none;
                     transition: all 0.2s;
                 }
 
                 .form-input:focus {
                     border-color: var(--accent);
-                    box-shadow: 0 0 0 3px var(--active-bg);
+                    background: rgba(255, 255, 255, 0.04);
+                }
+
+                .form-input::placeholder {
+                    color: #555;
                 }
 
                 .btn-submit {
                     width: 100%;
-                    padding: 14px;
+                    padding: 16px;
                     background: var(--accent);
-                    color: var(--text-primary);
+                    color: #0f1117;
                     border: none;
-                    border-radius: 10px;
-                    font-size: 15px;
+                    border-radius: 12px;
+                    font-size: 16px;
                     font-weight: 600;
                     font-family: inherit;
                     cursor: pointer;
-                    transition: background 0.2s;
-                    margin-top: 10px;
+                    transition: all 0.2s;
+                    margin-top: 16px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
                 }
 
                 .btn-submit:hover:not(:disabled) {
-                    background: #b59540;
+                    background: #d4b55c;
+                    transform: translateY(-1px);
                 }
 
                 .btn-submit:disabled {
                     opacity: 0.7;
                     cursor: not-allowed;
+                    transform: none;
                 }
             `}</style>
 
-            <div className="login-container">
-                <div style={{ position: 'absolute', inset: 0, zIndex: 0, opacity: 0.7 }}>
-                    <Prism
-                        animationType="3drotate"
-                        timeScale={0.2}
-                        height={4}
-                        baseWidth={6}
-                        scale={4}
-                        hueShift={0}
-                        colorFrequency={0.8}
-                        noise={0.1}
-                        glow={0.5}
-                    />
+            <AnimatePresence>
+                {isLoading && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        exit={{ opacity: 0 }}
+                        style={{ position: 'fixed', inset: 0, zIndex: 999999 }}
+                    >
+                        <Preloader text="Authenticating..." fullScreen={true} />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <div className="split-layout">
+                {/* ── LEFT PANEL (VIDEO) ── */}
+                <div className="video-panel">
+                    <video 
+                        className="video-bg" 
+                        autoPlay 
+                        loop 
+                        muted 
+                        playsInline
+                    >
+                        <source src="/worship-mobile.mp4" media="(max-width: 899px)" type="video/mp4" />
+                        <source src="/worship.mp4" type="video/mp4" />
+                    </video>
+                    <div className="video-overlay" />
                 </div>
 
-                <AnimatePresence>
-                    {isLoading && (
-                        <motion.div 
-                            initial={{ opacity: 0 }} 
-                            animate={{ opacity: 1 }} 
-                            exit={{ opacity: 0 }}
-                            style={{ position: 'fixed', inset: 0, zIndex: 999999 }}
-                        >
-                            <Preloader text="Authenticating..." fullScreen={true} />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                {/* ── RIGHT PANEL (FORM) ── */}
+                <div className="form-panel">
+                    <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                        className="login-card"
+                    >
+                        <div className="login-header">
+                            <motion.div 
+                                animate={{ y: [0, -5, 0] }}
+                                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                className="brand-icon-wrapper"
+                            >
+                                <div className="brand-icon">
+                                    <img src="/final_wam.png" alt="WAM" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                </div>
+                            </motion.div>
+                            <h1 className="login-title">Worship & Music</h1>
+                            <p className="login-subtitle">Sign in to your account</p>
+                        </div>
 
-                <motion.div 
-                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                    className="login-card"
-                >
-                    <div className="login-header">
-                        <motion.div 
-                            animate={{ 
-                                y: [0, -5, 0],
-                            }}
-                            transition={{ 
-                                duration: 3, 
-                                repeat: Infinity,
-                                ease: "easeInOut"
-                            }}
-                            className="brand-icon"
-                        >
-                            <Music size={32} color="var(--accent)" />
-                        </motion.div>
-                        <h1 className="login-title">Worship & Music</h1>
-                        <p className="login-subtitle">Sign in to manage the catalog</p>
-                    </div>
-
-                    <div className="login-body">
                         {error && (
                             <motion.div 
                                 initial={{ opacity: 0, height: 0 }}
@@ -288,7 +346,7 @@ const Login = () => {
                                     <input
                                         type="password"
                                         className="form-input"
-                                        placeholder="••••••••"
+                                        placeholder="Enter your password"
                                         value={password}
                                         onChange={e => setPassword(e.target.value)}
                                         required
@@ -297,17 +355,17 @@ const Login = () => {
                             </div>
 
                             <motion.button 
-                                whileHover={{ scale: 1.01 }}
-                                whileTap={{ scale: 0.99 }}
+                                whileTap={{ scale: 0.98 }}
                                 type="submit" 
                                 className="btn-submit" 
                                 disabled={isLoading}
                             >
-                                {isLoading ? 'Signing in...' : 'Sign In'}
+                                <span>{isLoading ? 'Signing in...' : 'Sign In'}</span>
+                                {!isLoading && <ArrowRight size={18} />}
                             </motion.button>
                         </form>
-                    </div>
-                </motion.div>
+                    </motion.div>
+                </div>
             </div>
         </>
     );

@@ -121,13 +121,13 @@ const Users = () => {
                 .users-page { font-family: 'DM Sans', sans-serif; color: #1a1814; }
                 .header-section { margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-end; }
                 .page-title { font-family: 'Cormorant Garamond', serif; font-size: 34px; font-weight: 700; color: #0f1117; margin: 0 0 4px 0; }
-                .page-desc { font-size: 14px; color: #8a8680; margin: 0; }
+                .page-desc { font-size: 16px; color: #8a8680; margin: 0; }
                 
                 .btn-primary {
                     display: inline-flex; align-items: center; gap: 7px;
                     background: #0f1117; color: #f0ede8;
                     border: none; border-radius: 10px; padding: 10px 18px;
-                    font-size: 13.5px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+                    font-size: 15.5px; font-weight: 500; cursor: pointer; transition: all 0.2s;
                 }
                 .btn-primary:hover { background: #1e2130; transform: translateY(-1px); }
 
@@ -137,12 +137,12 @@ const Users = () => {
                 }
 
                 .users-table { width: 100%; border-collapse: collapse; text-align: left; }
-                .users-table th { padding: 16px 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #a09d98; border-bottom: 1.5px solid #ede9e4; background: #faf9f7; }
-                .users-table td { padding: 16px 20px; font-size: 14px; color: #1a1814; border-bottom: 1px solid #f5f3f0; vertical-align: middle; }
+                .users-table th { padding: 16px 20px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #a09d98; border-bottom: 1.5px solid #ede9e4; background: #faf9f7; }
+                .users-table td { padding: 16px 20px; font-size: 16px; color: #1a1814; border-bottom: 1px solid #f5f3f0; vertical-align: middle; }
                 
-                .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: rgba(201,168,76,0.1); color: #c9a84c; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; }
+                .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: rgba(201,168,76,0.1); color: #c9a84c; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px; }
                 
-                .role-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+                .role-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
                 .role-admin { background: rgba(220, 38, 38, 0.1); color: #dc2626; }
                 .role-leader { background: rgba(14, 165, 233, 0.1); color: #0ea5e9; }
                 .role-pianist { background: rgba(168, 85, 247, 0.1); color: #a855f7; }
@@ -158,11 +158,11 @@ const Users = () => {
                 .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 700; color: #0f1117; margin: 0; }
                 .modal-body { padding: 24px; }
                 .form-field { margin-bottom: 20px; }
-                .form-label { display: block; font-size: 12px; font-weight: 600; color: #5a5550; margin-bottom: 8px; text-transform: uppercase; }
-                .form-input, .form-select { width: 100%; padding: 11px 14px; border: 1.5px solid #e8e4df; border-radius: 10px; font-size: 14px; outline: none; }
+                .form-label { display: block; font-size: 14px; font-weight: 600; color: #5a5550; margin-bottom: 8px; text-transform: uppercase; }
+                .form-input, .form-select { width: 100%; padding: 11px 14px; border: 1.5px solid #e8e4df; border-radius: 10px; font-size: 16px; outline: none; }
                 .form-input:focus, .form-select:focus { border-color: #c9a84c; }
                 .modal-footer { padding: 16px 24px; border-top: 1px solid #f0ece8; display: flex; justify-content: flex-end; gap: 10px; background: #faf8f5; }
-                .btn-ghost { padding: 9px 18px; border-radius: 10px; background: #ede9e4; border: none; font-size: 13.5px; font-weight: 500; cursor: pointer; }
+                .btn-ghost { padding: 9px 18px; border-radius: 10px; background: #ede9e4; border: none; font-size: 15.5px; font-weight: 500; cursor: pointer; }
             `}</style>
 
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="header-section">

@@ -79,10 +79,7 @@ const SongDetails = () => {
             setSong(songRes.data);
             setLeaders(leadersRes.data);
             
-            // Auto-expand if there's only one version
-            if (songRes.data.versions?.length === 1) {
-                setExpandedVersionId(songRes.data.versions[0].id);
-            }
+            // Do not auto-expand versions so the key is easily visible initially.
         } catch (error) {
             console.error('Error fetching song details:', error);
         } finally {
@@ -190,7 +187,7 @@ const SongDetails = () => {
 
                 .back-link {
                     display: inline-flex; align-items: center; gap: 6px;
-                    font-size: 13px; font-weight: 500; color: #9a9590;
+                    font-size: 15px; font-weight: 500; color: #9a9590;
                     text-decoration: none; margin-bottom: 22px; transition: color 0.14s;
                 }
                 .back-link:hover { color: var(--accent); }
@@ -218,7 +215,7 @@ const SongDetails = () => {
 
                 .hero-artist {
                     display: inline-flex; align-items: center; gap: 6px;
-                    font-size: 13.5px; color: var(--text-inverse-muted); margin: 0;
+                    font-size: 15.5px; color: var(--text-inverse-muted); margin: 0;
                 }
 
                 .btn-add-version {
@@ -230,7 +227,7 @@ const SongDetails = () => {
 
                 .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
                 .section-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 700; }
-                .section-count { font-size: 12px; padding: 3px 9px; border-radius: 20px; background: #f2eeea; border: 1px solid  var(--border-color); }
+                .section-count { font-size: 14px; padding: 3px 9px; border-radius: 20px; background: #f2eeea; border: 1px solid  var(--border-color); }
 
                 .version-card {
                     background: var(--bg-card); border-radius: 14px; border: 1.5px solid #ede9e4;
@@ -250,23 +247,23 @@ const SongDetails = () => {
 
                 .version-card-body { padding: 20px; border-top: 1px solid #f0ece8; }
                 .version-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-                .version-pill { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+                .version-pill { padding: 4px 10px; border-radius: 20px; font-size: 13px; font-weight: 600; }
                 .pill-key { background: var(--bg-surface); color: var(--accent); }
                 .pill-tempo { background: #f2eeea; color: #5a5550; }
 
-                .version-notes { background: #fcfaf7; border-radius: 8px; padding: 12px; font-size: 13px; color: #6a5830; margin-bottom: 16px; border-left: 3px solid var(--accent); }
+                .version-notes { background: #fcfaf7; border-radius: 8px; padding: 12px; font-size: 15px; color: #6a5830; margin-bottom: 16px; border-left: 3px solid var(--accent); }
 
                 .modal-overlay { position: fixed; inset: 0; background: rgba(15,17,23,0.7); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 24px; }
                 .modal-card { background: var(--bg-card); border-radius: 18px; width: 100%; max-width: 680px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
                 .modal-header { padding: 20px 24px; border-bottom: 1px solid #f0ece8; display: flex; justify-content: space-between; align-items: center; }
-                .modal-title { margin: 0; font-size: 18px; font-weight: 700; color: #0f1117; }
+                .modal-title { margin: 0; font-size: 20px; font-weight: 700; color: #0f1117; }
                 .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
                 .modal-footer { padding: 16px 24px; border-top: 1px solid #f0ece8; background: var(--bg-card-alt); display: flex; justify-content: flex-end; gap: 10px; }
 
                 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
                 .form-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
                 .form-grid .form-field { margin-bottom: 0; }
-                .form-label { font-size: 11px; font-weight: 700; color: #6a6560; text-transform: uppercase; }
+                .form-label { font-size: 13px; font-weight: 700; color: #6a6560; text-transform: uppercase; }
                 .form-input { border: 1.5px solid  var(--border-color); border-radius: 10px; padding: 10px 14px; outline: none; transition: border-color 0.2s; }
                 .form-input:focus { border-color: var(--accent); }
                 .btn-ghost { background: transparent; border: none; color: #6a6560; font-weight: 600; cursor: pointer; padding: 9px 18px; border-radius: 10px; transition: background 0.2s; }
@@ -334,7 +331,7 @@ const SongDetails = () => {
                         ) : (
                             song.versions?.map((version) => {
                                 const isExpanded = expandedVersionId === version.id;
-                                const canEdit = user?.role === 'admin' || user?.role === 'pianist' || (user?.name === version.leader?.name);
+                                const canEdit = user?.role === 'admin' || user?.role === 'pianist' || (user?.id === version.leader?.user_id) || (user?.name === version.leader?.name);
                                 return (
                                     <motion.div 
                                         key={version.id} 

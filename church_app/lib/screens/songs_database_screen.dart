@@ -36,6 +36,19 @@ class _SongsDatabaseScreenState extends State<SongsDatabaseScreen> {
   void initState() {
     super.initState();
     _fetchData();
+    SyncService.onSyncComplete.addListener(_onSyncComplete);
+  }
+
+  void _onSyncComplete() {
+    if (mounted) {
+      _fetchData();
+    }
+  }
+
+  @override
+  void dispose() {
+    SyncService.onSyncComplete.removeListener(_onSyncComplete);
+    super.dispose();
   }
 
   Future<void> _fetchData() async {
@@ -113,13 +126,16 @@ class _SongsDatabaseScreenState extends State<SongsDatabaseScreen> {
       setState(() {
         _songs = loadedSongs;
         _songToVersions = loadedVersionMap;
+        _applyFilters();
         _isLoading = false;
       });
     }
   }
 
-  List<Song> get _filteredSongs {
-    return _songs.where((s) {
+  List<Song> _filteredSongsList = [];
+
+  void _applyFilters() {
+    _filteredSongsList = _songs.where((s) {
       // 1. Search Query
       final title = s.title.toLowerCase();
       final searchFilter =
@@ -319,7 +335,10 @@ class _SongsDatabaseScreenState extends State<SongsDatabaseScreen> {
                     ),
                   ),
                   onChanged: (val) {
-                    setState(() => _searchQuery = val);
+                    setState(() {
+                      _searchQuery = val;
+                      _applyFilters();
+                    });
                   },
                 ),
                 SizedBox(height: 8),
@@ -348,9 +367,10 @@ class _SongsDatabaseScreenState extends State<SongsDatabaseScreen> {
                               fontSize: 13,
                             ),
                             onChanged: (String? newValue) {
-                              if (newValue != null) {
-                                setState(() => _selectedLeader = newValue);
-                              }
+                                setState(() {
+                                  _selectedLeader = newValue!;
+                                  _applyFilters();
+                                });
                             },
                             items: _uniqueLeaders.map<DropdownMenuItem<String>>(
                               (String value) {
@@ -391,9 +411,10 @@ class _SongsDatabaseScreenState extends State<SongsDatabaseScreen> {
                               fontSize: 13,
                             ),
                             onChanged: (String? newValue) {
-                              if (newValue != null) {
-                                setState(() => _selectedCategory = newValue);
-                              }
+                                setState(() {
+                                  _selectedCategory = newValue!;
+                                  _applyFilters();
+                                });
                             },
                             items: _uniqueCategories
                                 .map<DropdownMenuItem<String>>((String value) {
@@ -428,11 +449,15 @@ class _SongsDatabaseScreenState extends State<SongsDatabaseScreen> {
                 await SyncService().syncEverything();
                 await _fetchData();
               },
-              child: ListView.builder(
-                padding: EdgeInsets.all(16),
-                itemCount: _filteredSongs.length,
-                itemBuilder: (context, index) {
-                final song = _filteredSongs[index];
+              child: _filteredSongsList.isEmpty
+                ? Center(
+                    child: Text('No songs found.',
+                        style: TextStyle(color: AppColors.textMuted)))
+                : ListView.builder(
+                    padding: EdgeInsets.all(16),
+                    itemCount: _filteredSongsList.length,
+                    itemBuilder: (context, index) {
+                      final song = _filteredSongsList[index];
                 final versions = _songToVersions[song.id] ?? [];
 
                 final authProvider = Provider.of<AuthProvider>(context, listen: false);

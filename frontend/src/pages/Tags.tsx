@@ -114,13 +114,13 @@ const Tags = () => {
                     margin: 0 0 4px 0; letter-spacing: -0.01em;
                 }
 
-                .page-title-wrap p { font-size: 13.5px; color: #8a8680; margin: 0; }
+                .page-title-wrap p { font-size: 15.5px; color: #8a8680; margin: 0; }
 
                 .btn-primary {
                     display: inline-flex; align-items: center; gap: 7px;
                     background: var(--bg-surface); color: var(--text-primary);
                     border: none; border-radius: 10px; padding: 10px 18px;
-                    font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 500;
+                    font-family: 'DM Sans', sans-serif; font-size: 15.5px; font-weight: 500;
                     cursor: pointer; transition: background 0.15s, transform 0.1s;
                     white-space: nowrap; position: relative; overflow: hidden;
                 }
@@ -135,7 +135,7 @@ const Tags = () => {
 
                 /* count */
                 .count-bar { margin-bottom: 14px; padding-left: 2px; }
-                .count-text { font-size: 12.5px; color: #9a9590; font-weight: 500; }
+                .count-text { font-size: 14.5px; color: #9a9590; font-weight: 500; }
                 .count-accent { color: var(--accent); font-weight: 600; }
 
                 /* ── TAGS CLOUD ── */
@@ -162,7 +162,7 @@ const Tags = () => {
                     border-radius: 22px;
                     border-width: 1.5px;
                     border-style: solid;
-                    font-size: 13.5px;
+                    font-size: 15.5px;
                     font-weight: 600;
                     cursor: default;
                     transition: box-shadow 0.15s, transform 0.12s;
@@ -215,7 +215,7 @@ const Tags = () => {
                     font-size: 21px; font-weight: 600; color: #1a1814; margin: 0 0 5px 0;
                 }
 
-                .tags-empty p { font-size: 13.5px; color: var(--text-inverse-muted); margin: 0; }
+                .tags-empty p { font-size: 15.5px; color: var(--text-inverse-muted); margin: 0; }
 
                 /* ── MODAL ── */
                 .modal-overlay {
@@ -253,7 +253,7 @@ const Tags = () => {
                 .modal-body { padding: 24px; }
 
                 .form-label {
-                    display: block; font-size: 11.5px; font-weight: 700;
+                    display: block; font-size: 13.5px; font-weight: 700;
                     color: #5a5550; margin-bottom: 7px;
                     letter-spacing: 0.06em; text-transform: uppercase;
                 }
@@ -261,7 +261,7 @@ const Tags = () => {
                 .form-input {
                     width: 100%; border: 1.5px solid  var(--border-color); border-radius: 10px;
                     padding: 11px 14px; font-family: 'DM Sans', sans-serif;
-                    font-size: 14px; color: #1a1814; outline: none; background: var(--bg-card);
+                    font-size: 16px; color: #1a1814; outline: none; background: var(--bg-card);
                     transition: border-color 0.15s, box-shadow 0.15s;
                 }
 
@@ -275,7 +275,7 @@ const Tags = () => {
 
                 .btn-ghost {
                     padding: 9px 18px; border-radius: 10px;
-                    font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 500;
+                    font-family: 'DM Sans', sans-serif; font-size: 15.5px; font-weight: 500;
                     background: #ede9e4; color: #5a5550; border: none; cursor: pointer;
                     transition: background 0.14s;
                 }
@@ -284,7 +284,7 @@ const Tags = () => {
 
                 .btn-submit {
                     padding: 9px 20px; border-radius: 10px;
-                    font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 500;
+                    font-family: 'DM Sans', sans-serif; font-size: 15.5px; font-weight: 500;
                     background: var(--bg-surface); color: var(--text-primary); border: none; cursor: pointer;
                     transition: background 0.14s; position: relative; overflow: hidden;
                 }

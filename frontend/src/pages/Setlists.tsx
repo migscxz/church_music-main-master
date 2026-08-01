@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Pencil, Trash2, Plus, X, Calendar, ListMusic, Check, ChevronDown, ChevronRight, Youtube, HardDrive, ExternalLink, Mic } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Pencil, Trash2, Plus, X, Calendar, ListMusic, Check, ChevronDown, ChevronRight, Youtube, HardDrive, ExternalLink, Mic, GripVertical, Copy } from 'lucide-react';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
 
 interface SongLeader { id: number; name: string; user_id?: number | null; }
 interface Song { id: number; title: string; original_key?: string; }
@@ -35,6 +35,12 @@ const Setlists = () => {
     const [leaderFilter, setLeaderFilter] = useState<string>('All');
     const [versionSearch, setVersionSearch] = useState('');
 
+    // Quick Add States
+    const [showQuickAdd, setShowQuickAdd] = useState(false);
+    const [quickAddSongId, setQuickAddSongId] = useState('');
+    const [quickAddLeaderId, setQuickAddLeaderId] = useState('');
+    const [quickAddKey, setQuickAddKey] = useState('');
+
     // Track which version is currently expanded. Map: setlistId -> versionId
     const [expandedVersions, setExpandedVersions] = useState<Record<number, number>>({});
 
@@ -44,6 +50,17 @@ const Setlists = () => {
         queryFn: () => api.get('/setlists').then(res => res.data)
     });
 
+    // Auto-hide setlists that are more than 1 week old
+    const activeSetlists = useMemo(() => {
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        return setlists.filter(setlist => {
+            if (!setlist.date) return true; // Keep setlists without a date forever
+            const setlistDate = new Date(setlist.date);
+            return setlistDate >= oneWeekAgo;
+        });
+    }, [setlists]);
+
     const { data: availableVersions = [] } = useQuery<SongVersion[]>({
         queryKey: ['song-versions'],
         queryFn: () => api.get('/song-versions').then(res => res.data)
@@ -52,6 +69,11 @@ const Setlists = () => {
     const { data: leadersData = [] } = useQuery<SongLeader[]>({
         queryKey: ['song-leaders'],
         queryFn: () => api.get('/song-leaders').then(res => res.data)
+    });
+
+    const { data: songsData = [] } = useQuery<Song[]>({
+        queryKey: ['songs'],
+        queryFn: () => api.get('/songs').then(res => res.data)
     });
 
     // For leaders: only show their own versions in the picker
@@ -81,6 +103,28 @@ const Setlists = () => {
         onError: (error) => console.error('Error deleting setlist:', error)
     });
 
+    const createVersionMutation = useMutation({
+        mutationFn: (payload: any) => api.post('/song-versions', payload),
+        onSuccess: (response) => {
+            queryClient.invalidateQueries({ queryKey: ['song-versions'] });
+            setSelectedVersionIds(prev => [...prev, response.data.id]);
+            setShowQuickAdd(false);
+            setQuickAddSongId('');
+            setQuickAddLeaderId('');
+            setQuickAddKey('');
+        },
+        onError: (error) => console.error('Error creating version:', error)
+    });
+
+    const handleQuickAdd = () => {
+        if (!quickAddSongId || !quickAddLeaderId) return;
+        createVersionMutation.mutate({
+            song_id: quickAddSongId,
+            song_leader_id: quickAddLeaderId,
+            key: quickAddKey
+        });
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         saveMutation.mutate({ title, date: date || null, song_version_ids: selectedVersionIds });
@@ -105,6 +149,29 @@ const Setlists = () => {
         setLeaderFilter('All');
         setVersionSearch('');
         setIsModalOpen(true);
+    };
+
+    const [copySuccessId, setCopySuccessId] = useState<number | null>(null);
+
+    const handleCopySetlist = (setlist: Setlist) => {
+        const versions = (setlist as any).song_versions || (setlist as any).songVersions || [];
+        
+        let text = `${setlist.title}\n`;
+        if (setlist.date) {
+            const d = new Date(setlist.date);
+            const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
+            text += `${d.toLocaleDateString('en-US', options)} (${d.toLocaleDateString('en-US', { weekday: 'long' })})\n`;
+        }
+        text += `\n`;
+        
+        versions.forEach((v: any, index: number) => {
+            text += `${index + 1}. ${v.song?.title} - Key of ${v.key} (${v.leader?.name})\n`;
+        });
+        
+        navigator.clipboard.writeText(text).then(() => {
+            setCopySuccessId(setlist.id);
+            setTimeout(() => setCopySuccessId(null), 2000);
+        });
     };
 
     const toggleVersion = (id: number) => {
@@ -174,13 +241,13 @@ const Setlists = () => {
                     margin: 0 0 4px 0; letter-spacing: -0.01em;
                 }
 
-                .page-title-wrap p { font-size: 13.5px; color: #8a8680; margin: 0; }
+                .page-title-wrap p { font-size: 15.5px; color: #8a8680; margin: 0; }
 
                 .btn-primary {
                     display: inline-flex; align-items: center; gap: 7px;
                     background: var(--bg-surface); color: var(--text-primary);
                     border: none; border-radius: 10px; padding: 10px 18px;
-                    font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 500;
+                    font-family: 'DM Sans', sans-serif; font-size: 15.5px; font-weight: 500;
                     cursor: pointer; transition: background 0.15s, transform 0.1s;
                     white-space: nowrap; position: relative; overflow: hidden;
                 }
@@ -195,7 +262,7 @@ const Setlists = () => {
 
                 /* count bar */
                 .count-bar { margin-bottom: 14px; padding-left: 2px; }
-                .count-text { font-size: 12.5px; color: #9a9590; font-weight: 500; }
+                .count-text { font-size: 14.5px; color: #9a9590; font-weight: 500; }
                 .count-accent { color: var(--accent); font-weight: 600; }
 
                 /* ── GRID ── */
@@ -261,14 +328,14 @@ const Setlists = () => {
 
                 .card-date {
                     display: inline-flex; align-items: center; gap: 5px;
-                    font-size: 12px; color: rgba(201,168,76,0.7);
+                    font-size: 14px; color: rgba(201,168,76,0.7);
                     font-weight: 500; letter-spacing: 0.03em;
                 }
 
                 .card-body { padding: 18px; flex: 1; }
 
                 .songs-label {
-                    font-size: 10.5px; font-weight: 700;
+                    font-size: 12.5px; font-weight: 700;
                     letter-spacing: 0.12em; text-transform: uppercase;
                     color: #b0aba5; margin-bottom: 12px;
                     display: flex; align-items: center; gap: 6px;
@@ -278,7 +345,7 @@ const Setlists = () => {
                     background: #f2eeea;
                     border: 1px solid  var(--border-color);
                     color: #7a7570;
-                    font-size: 10px; padding: 1px 7px;
+                    font-size: 12px; padding: 1px 7px;
                     border-radius: 20px;
                 }
 
@@ -310,8 +377,8 @@ const Setlists = () => {
                     flex-shrink: 0; margin-top: 1px;
                 }
 
-                .version-song { font-size: 13.5px; font-weight: 600; color: #1a1814; }
-                .version-meta { font-size: 12.5px; color: #9a9590; margin-top: 2px; }
+                .version-song { font-size: 15.5px; font-weight: 600; color: #1a1814; }
+                .version-meta { font-size: 14.5px; color: #9a9590; margin-top: 2px; }
                 
                 .version-item-body {
                     border-top: 1px solid #f0ece8;
@@ -327,13 +394,13 @@ const Setlists = () => {
                     display: inline-flex; align-items: center; gap: 5px;
                     padding: 5px 10px; border-radius: 6px;
                     background: #f7f4f0; border: 1px solid #ede9e4;
-                    font-size: 11.5px; font-weight: 600; color: #6a6560;
+                    font-size: 13.5px; font-weight: 600; color: #6a6560;
                     text-decoration: none; transition: all 0.14s;
                 }
                 
                 .vi-link-btn:hover { background: var(--bg-card); border-color: var(--accent); color: var(--accent); box-shadow: 0 2px 5px rgba(201,168,76,0.1); transform: translateY(-1px); }
 
-                .no-songs { font-size: 13px; color: #c0bbb5; font-style: italic; }
+                .no-songs { font-size: 15px; color: #c0bbb5; font-style: italic; }
 
                 /* ── EMPTY ── */
                 .setlists-empty {
@@ -357,7 +424,7 @@ const Setlists = () => {
                     font-size: 22px; font-weight: 600; color: #1a1814; margin: 0 0 6px 0;
                 }
 
-                .setlists-empty p { font-size: 13.5px; color: var(--text-inverse-muted); margin: 0; }
+                .setlists-empty p { font-size: 15.5px; color: var(--text-inverse-muted); margin: 0; }
 
                 /* ── MODAL ── */
                 .modal-overlay {
@@ -400,7 +467,7 @@ const Setlists = () => {
                 .form-field { display: flex; flex-direction: column; }
 
                 .form-label {
-                    font-size: 11.5px; font-weight: 700; color: #5a5550;
+                    font-size: 13.5px; font-weight: 700; color: #5a5550;
                     margin-bottom: 7px; letter-spacing: 0.06em; text-transform: uppercase;
                 }
 
@@ -409,7 +476,7 @@ const Setlists = () => {
                 .form-input {
                     border: 1.5px solid  var(--border-color); border-radius: 10px;
                     padding: 10px 14px; font-family: 'DM Sans', sans-serif;
-                    font-size: 14px; color: #1a1814; outline: none; background: var(--bg-card);
+                    font-size: 16px; color: #1a1814; outline: none; background: var(--bg-card);
                     transition: border-color 0.15s, box-shadow 0.15s;
                 }
 
@@ -417,7 +484,7 @@ const Setlists = () => {
                 .form-input::placeholder { color: #c0bbb5; }
 
                 .songs-section-label {
-                    font-size: 11.5px; font-weight: 700; color: #5a5550;
+                    font-size: 13.5px; font-weight: 700; color: #5a5550;
                     letter-spacing: 0.06em; text-transform: uppercase;
                     margin-bottom: 12px;
                 }
@@ -459,13 +526,13 @@ const Setlists = () => {
                     background: var(--bg-surface); border-color: var(--text-primary);
                 }
 
-                .vs-song { font-size: 13.5px; font-weight: 600; color: #1a1814; }
-                .vs-meta { font-size: 12px; color: #9a9590; margin-top: 1px; }
+                .vs-song { font-size: 15.5px; font-weight: 600; color: #1a1814; }
+                .vs-meta { font-size: 14px; color: #9a9590; margin-top: 1px; }
 
                 .no-versions-msg {
                     padding: 20px; text-align: center;
                     border: 1.5px dashed  var(--border-color); border-radius: 10px;
-                    font-size: 13px; color: #b0aba5; font-style: italic;
+                    font-size: 15px; color: #b0aba5; font-style: italic;
                 }
 
                 .modal-footer {
@@ -475,7 +542,7 @@ const Setlists = () => {
 
                 .btn-ghost {
                     padding: 9px 18px; border-radius: 10px;
-                    font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 500;
+                    font-family: 'DM Sans', sans-serif; font-size: 15.5px; font-weight: 500;
                     background: #ede9e4; color: #5a5550; border: none; cursor: pointer;
                     transition: background 0.14s;
                 }
@@ -484,7 +551,7 @@ const Setlists = () => {
 
                 .btn-submit {
                     padding: 9px 20px; border-radius: 10px;
-                    font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 500;
+                    font-family: 'DM Sans', sans-serif; font-size: 15.5px; font-weight: 500;
                     background: var(--bg-surface); color: var(--text-primary); border: none; cursor: pointer;
                     transition: background 0.14s; position: relative; overflow: hidden;
                 }
@@ -521,7 +588,7 @@ const Setlists = () => {
 
                 <div className="count-bar">
                     <span className="count-text">
-                        <span className="count-accent">{setlists.length}</span> setlist{setlists.length !== 1 ? 's' : ''}
+                        <span className="count-accent">{activeSetlists.length}</span> setlist{activeSetlists.length !== 1 ? 's' : ''}
                     </span>
                 </div>
 
@@ -532,7 +599,7 @@ const Setlists = () => {
                         animate="show"
                         className="setlists-grid"
                     >
-                        {setlists.length === 0 ? (
+                        {activeSetlists.length === 0 ? (
                             <motion.div 
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -543,7 +610,7 @@ const Setlists = () => {
                                 <h3>No setlists yet</h3>
                                 <p>Create a setlist to organize songs for your next practice.</p>
                             </motion.div>
-                        ) : setlists.map(setlist => {
+                        ) : activeSetlists.map(setlist => {
                             const versions = (setlist as any).song_versions || (setlist as any).songVersions || [];
                             return (
                                 <motion.div 
@@ -556,6 +623,16 @@ const Setlists = () => {
                                         <div className="card-header-top">
                                             <h3 className="card-title">{setlist.title}</h3>
                                             <div className="card-header-actions">
+                                                <motion.button 
+                                                    whileHover={{ scale: 1.1 }}
+                                                    whileTap={{ scale: 0.9 }}
+                                                    onClick={() => handleCopySetlist(setlist)} 
+                                                    className="hdr-btn hdr-btn-edit" 
+                                                    title="Copy for GC"
+                                                    style={{ color: copySuccessId === setlist.id ? 'var(--accent)' : '' }}
+                                                >
+                                                    {copySuccessId === setlist.id ? <Check size={13} /> : <Copy size={13} />}
+                                                </motion.button>
                                                 <motion.button 
                                                     whileHover={{ scale: 1.1 }}
                                                     whileTap={{ scale: 0.9 }}
@@ -691,9 +768,58 @@ const Setlists = () => {
                                         </div>
                                     </div>
 
+                                    {selectedVersionIds.length > 0 && (
+                                        <div style={{ marginBottom: '24px' }}>
+                                            <p className="songs-section-label">Selected Songs <span style={{ textTransform: 'none', color: '#8a8680', fontWeight: 500, fontSize: '12px', marginLeft: '4px' }}>(Drag to reorder)</span></p>
+                                            <Reorder.Group 
+                                                axis="y" 
+                                                values={selectedVersionIds} 
+                                                onReorder={setSelectedVersionIds}
+                                                style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}
+                                            >
+                                                {selectedVersionIds.map(id => {
+                                                    const v = availableVersions.find(av => av.id === id);
+                                                    if (!v) return null;
+                                                    return (
+                                                        <Reorder.Item 
+                                                            key={v.id} 
+                                                            value={v.id}
+                                                            style={{ 
+                                                                background: '#fff', 
+                                                                border: '1.5px solid #ede9e4', 
+                                                                borderRadius: '8px', 
+                                                                padding: '10px 14px',
+                                                                display: 'flex', 
+                                                                alignItems: 'center', 
+                                                                justifyContent: 'space-between',
+                                                                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                                                                cursor: 'grab'
+                                                            }}
+                                                        >
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                                <GripVertical size={16} color="#c0bbb5" />
+                                                                <div>
+                                                                    <div className="vs-song" style={{ fontSize: '14.5px' }}>{v.song?.title}</div>
+                                                                    <div className="vs-meta" style={{ fontSize: '13px' }}>{v.leader?.name} · Key of {v.key}</div>
+                                                                </div>
+                                                            </div>
+                                                            <button 
+                                                                type="button" 
+                                                                onClick={() => toggleVersion(v.id)}
+                                                                style={{ background: 'none', border: 'none', color: '#9a9590', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                            >
+                                                                <X size={16} />
+                                                            </button>
+                                                        </Reorder.Item>
+                                                    );
+                                                })}
+                                            </Reorder.Group>
+                                        </div>
+                                    )}
+
                                     <div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
-                                            <p className="songs-section-label" style={{ marginBottom: 0 }}>Select Song Versions</p>
+                                            <p className="songs-section-label" style={{ marginBottom: 0 }}>Add Songs</p>
                                             {isAdminOrPianist && (
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <label style={{ fontSize: '12px', color: 'var(--text-inverse-muted)', fontWeight: 500 }}>Filter by Leader:</label>
@@ -724,9 +850,65 @@ const Setlists = () => {
                                                 onChange={e => setVersionSearch(e.target.value)}
                                                 placeholder="Search songs..."
                                                 className="form-input"
-                                                style={{ paddingLeft: '32px', fontSize: '13px' }}
+                                                style={{ paddingLeft: '32px', fontSize: '13px', width: '100%' }}
                                             />
                                         </div>
+
+                                        {/* Quick Add Toggle */}
+                                        <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'flex-end' }}>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setShowQuickAdd(!showQuickAdd)}
+                                                style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                            >
+                                                {showQuickAdd ? <X size={14} /> : <Plus size={14} />}
+                                                {showQuickAdd ? 'Cancel Quick Add' : 'Quick Add Version'}
+                                            </button>
+                                        </div>
+
+                                        <AnimatePresence>
+                                            {showQuickAdd && (
+                                                <motion.div 
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: 'auto' }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    style={{ overflow: 'hidden', marginBottom: '16px' }}
+                                                >
+                                                    <div style={{ background: '#f7f4f0', border: '1.5px solid #ede9e4', padding: '16px', borderRadius: '10px' }}>
+                                                        <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#1a1814' }}>Create New Version</h4>
+                                                        <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                                                            <div className="form-field">
+                                                                <label className="form-label" style={{ fontSize: '12px' }}>Song</label>
+                                                                <select value={quickAddSongId} onChange={e => setQuickAddSongId(e.target.value)} className="form-input" style={{ fontSize: '13px', padding: '8px' }}>
+                                                                    <option value="">Select Song</option>
+                                                                    {songsData.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
+                                                                </select>
+                                                            </div>
+                                                            <div className="form-field">
+                                                                <label className="form-label" style={{ fontSize: '12px' }}>Leader</label>
+                                                                <select value={quickAddLeaderId} onChange={e => setQuickAddLeaderId(e.target.value)} className="form-input" style={{ fontSize: '13px', padding: '8px' }}>
+                                                                    <option value="">Select Leader</option>
+                                                                    {leadersData.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div className="form-field" style={{ marginBottom: '12px' }}>
+                                                            <label className="form-label" style={{ fontSize: '12px' }}>Key</label>
+                                                            <input type="text" value={quickAddKey} onChange={e => setQuickAddKey(e.target.value)} className="form-input" placeholder="e.g. G" style={{ fontSize: '13px', padding: '8px' }} />
+                                                        </div>
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={handleQuickAdd}
+                                                            disabled={!quickAddSongId || !quickAddLeaderId}
+                                                            className="btn-primary" 
+                                                            style={{ padding: '8px 16px', fontSize: '13px', opacity: (!quickAddSongId || !quickAddLeaderId) ? 0.5 : 1 }}
+                                                        >
+                                                            <Plus size={14} /> Add Version
+                                                        </button>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
 
                                         <div className="versions-list">
                                             {filteredVersions.length === 0 ? (

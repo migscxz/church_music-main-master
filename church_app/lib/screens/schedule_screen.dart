@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../services/database_helper.dart';
+import '../services/sync_service.dart';
 import '../models/schedule_model.dart';
 import '../utils/constants.dart';
 
@@ -33,6 +34,19 @@ class ScheduleScreenState extends State<ScheduleScreen> {
   void initState() {
     super.initState();
     _loadData();
+    SyncService.onSyncComplete.addListener(_onSyncComplete);
+  }
+
+  void _onSyncComplete() {
+    if (mounted) {
+      _loadData();
+    }
+  }
+
+  @override
+  void dispose() {
+    SyncService.onSyncComplete.removeListener(_onSyncComplete);
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -198,41 +212,43 @@ class ScheduleScreenState extends State<ScheduleScreen> {
                   ),
                 )
               : ListView.builder(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 100),
                   itemCount: _schedules.length,
                   itemBuilder: (context, index) {
                     final schedule = _schedules[index];
                     return Card(
                       color: AppColors.surface,
                       elevation: 0,
-                      margin: EdgeInsets.only(bottom: 24),
+                      margin: EdgeInsets.only(bottom: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                         side: BorderSide(color: AppColors.borderLight, width: 1.5),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceWarm,
-                              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                              border: Border(bottom: BorderSide(color: AppColors.borderLight)),
-                            ),
-                            child: Text(
-                              _formatMonthYear(schedule.monthYear).toUpperCase(),
-                              style: TextStyle(
-                                fontFamily: 'Cormorant Garamond',
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.2,
-                                color: AppColors.textMain,
-                              ),
+                      child: Theme(
+                        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                        child: ExpansionTile(
+                          initiallyExpanded: index == 0,
+                          iconColor: AppColors.accentGold,
+                          collapsedIconColor: AppColors.textSecondary,
+                          title: Text(
+                            _formatMonthYear(schedule.monthYear).toUpperCase(),
+                            style: TextStyle(
+                              fontFamily: 'Cormorant Garamond',
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                              color: AppColors.textMain,
                             ),
                           ),
-                          _buildMobileSchedule(schedule),
-                        ],
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                border: Border(top: BorderSide(color: AppColors.borderLight)),
+                              ),
+                              child: _buildMobileSchedule(schedule),
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },

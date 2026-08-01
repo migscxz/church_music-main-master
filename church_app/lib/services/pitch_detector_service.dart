@@ -1,22 +1,36 @@
 import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_audio_capture/flutter_audio_capture.dart';
 import 'package:pitch_detector_dart/pitch_detector.dart';
 import 'package:pitch_detector_dart/pitch_detector_result.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+class PitchComputePayload {
+  final List<double> audioSamples;
+  final double sampleRate;
+  final int bufferSize;
+  
+  PitchComputePayload(this.audioSamples, this.sampleRate, this.bufferSize);
+}
+
+Future<String?> _processAudioInIsolate(PitchComputePayload payload) async {
+  final detector = PitchDetector(audioSampleRate: payload.sampleRate, bufferSize: payload.bufferSize);
+  final result = await detector.getPitchFromFloatBuffer(payload.audioSamples);
+  
+  if (result.pitched && result.probability > 0.8) {
+    return PitchDetectorService.getNoteFromFrequency(result.pitch);
+  }
+  return null;
+}
+
 class PitchDetectorService {
   final FlutterAudioCapture _audioCapture = FlutterAudioCapture();
-  late PitchDetector _pitchDetector;
   
   bool _isRecording = false;
   final StreamController<String> _noteStreamController = StreamController<String>.broadcast();
   Stream<String> get noteStream => _noteStreamController.stream;
-
-  PitchDetectorService() {
-    _pitchDetector = PitchDetector(audioSampleRate: 44100, bufferSize: 2048);
-  }
 
   Future<bool> requestPermission() async {
     var status = await Permission.microphone.request();
@@ -52,12 +66,11 @@ class PitchDetectorService {
   void _audioListener(Float32List obj) async {
     List<double> audioSamples = obj.toList();
     
-    PitchDetectorResult result = await _pitchDetector.getPitchFromFloatBuffer(audioSamples);
-    if (result.pitched && result.probability > 0.8) {
-      String note = _getNoteFromFrequency(result.pitch);
-      if (note.isNotEmpty) {
-        _noteStreamController.add(note);
-      }
+    final payload = PitchComputePayload(audioSamples, 44100.0, 2048);
+    final String? note = await compute(_processAudioInIsolate, payload);
+    
+    if (note != null && note.isNotEmpty) {
+      _noteStreamController.add(note);
     }
   }
 
@@ -71,7 +84,7 @@ class PitchDetectorService {
     _noteStreamController.close();
   }
 
-  String _getNoteFromFrequency(double frequency) {
+  static String getNoteFromFrequency(double frequency) {
     if (frequency < 50 || frequency > 3000) return ""; 
     
     // A4 is 440 Hz

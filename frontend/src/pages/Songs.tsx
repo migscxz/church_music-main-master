@@ -145,25 +145,9 @@ const Songs = () => {
             // If leader wants to auto-add their version, create song first, then version
             try {
                 const res = await api.post('/songs', payload);
-                const newSong = res.data;
                 queryClient.invalidateQueries({ queryKey: ['songs'] });
                 setIsModalOpen(false);
                 resetForm();
-
-                // Auto-link: create a version with Unknown key for the leader
-                if (autoAddVersion && user?.role === 'leader' && myLeaderProfile) {
-                    quickAddMutation.mutate({
-                        song_id: newSong.id,
-                        song_leader_id: myLeaderProfile.id,
-                        key: null,
-                    });
-                } else if (autoAddVersion && (user?.role === 'admin' || user?.role === 'pianist') && assignedOwnerId) {
-                    quickAddMutation.mutate({
-                        song_id: newSong.id,
-                        song_leader_id: parseInt(assignedOwnerId),
-                        key: null,
-                    });
-                }
             } catch (error: any) {
                 if (error.response?.status === 422 && error.response.data?.errors?.title) {
                     alert('This exact song (Title + Artist) already exists in the catalog!');
@@ -198,11 +182,18 @@ const Songs = () => {
             alert('You already have this song in your list!');
             return;
         }
+        
+        // Auto-copy chords from an existing version if available
+        const versionWithChords = song.versions?.find(v => v.chords && v.chords.trim().length > 0);
+        
         setQuickAddingId(song.id);
         quickAddMutation.mutate({
             song_id: song.id,
             song_leader_id: myLeaderProfile.id,
-            key: null,
+            key: versionWithChords?.key || null, // Auto-copy the key too!
+            chords: versionWithChords?.chords || null,
+            tempo: versionWithChords?.tempo || null,
+            youtube_link: versionWithChords?.youtube_link || null
         });
     };
 
@@ -263,18 +254,18 @@ const Songs = () => {
                 .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; flex-wrap: wrap; gap: 20px; }
                 .page-title-wrap h1 { font-family: 'Cormorant Garamond', serif; font-size: 34px; font-weight: 700; color: #0f1117; margin: 0; }
                 .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-                .control-select { border: 1.5px solid #e8e4df; border-radius: 10px; padding: 9px 14px; font-size: 13.5px; background: #fff; cursor: pointer; min-width: 140px; }
+                .control-select { border: 1.5px solid #e8e4df; border-radius: 10px; padding: 9px 14px; font-size: 15.5px; background: #fff; cursor: pointer; min-width: 140px; }
                 .search-wrap { position: relative; }
-                .search-input { border: 1.5px solid #e8e4df; border-radius: 10px; padding: 9px 14px 9px 38px; font-size: 13.5px; width: 220px; }
-                .btn-primary { display: inline-flex; align-items: center; gap: 7px; background: #0f1117; color: #f0ede8; border: none; border-radius: 10px; padding: 9px 18px; font-size: 13.5px; font-weight: 500; cursor: pointer; }
+                .search-input { border: 1.5px solid #e8e4df; border-radius: 10px; padding: 9px 14px 9px 38px; font-size: 15.5px; width: 220px; }
+                .btn-primary { display: inline-flex; align-items: center; gap: 7px; background: #0f1117; color: #f0ede8; border: none; border-radius: 10px; padding: 9px 18px; font-size: 15.5px; font-weight: 500; cursor: pointer; }
                 .songs-list { background: #fff; border-radius: 14px; border: 1.5px solid #ede9e4; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
                 .song-row { border-bottom: 1px solid #f2eeea; }
                 .song-row-header { display: flex; align-items: center; padding: 16px; cursor: pointer; gap: 14px; }
                 .song-icon-wrap { width: 42px; height: 42px; border-radius: 10px; background: #f7f4f0; display: flex; align-items: center; justify-content: center; }
-                .song-title { font-size: 15px; font-weight: 600; margin: 0; }
-                .song-artist { font-size: 12.5px; color: #9a9590; margin: 0; }
+                .song-title { font-size: 17px; font-weight: 600; margin: 0; }
+                .song-artist { font-size: 14.5px; color: #9a9590; margin: 0; }
                 .song-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
-                .meta-badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+                .meta-badge { font-size: 13px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
                 .meta-badge-neutral { background: #f2eeea; color: #6a6560; }
                 .meta-badge-accent { background: rgba(201,168,76,0.1); color: #8a6d2f; border: 1px solid rgba(201,168,76,0.2); }
                 .song-row-body { padding: 0 16px 16px 72px; }
@@ -288,8 +279,8 @@ const Songs = () => {
                 .modal-close { border: 1.5px solid #e8e4df; background: #fff; cursor: pointer; border-radius: 8px; padding: 4px; display: flex; align-items: center; justify-content: center; }
                 .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
                 .form-field { margin-bottom: 18px; }
-                .form-label { display: block; font-size: 12.5px; font-weight: 600; color: #5a5550; margin-bottom: 7px; text-transform: uppercase; }
-                .form-input { width: 100%; border: 1.5px solid #e8e4df; border-radius: 10px; padding: 11px 14px; font-size: 14px; outline: none; transition: border-color 0.2s; }
+                .form-label { display: block; font-size: 14.5px; font-weight: 600; color: #5a5550; margin-bottom: 7px; text-transform: uppercase; }
+                .form-input { width: 100%; border: 1.5px solid #e8e4df; border-radius: 10px; padding: 11px 14px; font-size: 16px; outline: none; transition: border-color 0.2s; }
                 .form-input:focus { border-color: #c9a84c; }
                 .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px; border-top: 1px solid #f0ece8; background: #faf8f5; }
                 .btn-ghost { background: transparent; border: none; color: #6a6560; font-weight: 600; cursor: pointer; padding: 9px 18px; border-radius: 10px; transition: background 0.2s; }
@@ -297,7 +288,7 @@ const Songs = () => {
                 .btn-submit { background: #0f1117; color: #f0ede8; border: none; font-weight: 600; cursor: pointer; padding: 9px 18px; border-radius: 10px; transition: background 0.2s; }
                 .btn-submit:hover { background: #1a1a1a; }
                 .cat-checkboxes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
-                .cat-check-lbl { display: inline-flex; align-items: center; gap: 5px; background: #fdfdfc; border: 1.5px solid #e8e4df; border-radius: 8px; padding: 6px 10px; font-size: 13px; cursor: pointer; transition: border-color 0.2s; }
+                .cat-check-lbl { display: inline-flex; align-items: center; gap: 5px; background: #fdfdfc; border: 1.5px solid #e8e4df; border-radius: 8px; padding: 6px 10px; font-size: 15px; cursor: pointer; transition: border-color 0.2s; }
             `}</style>
 
             <div className="songs-page">
@@ -381,8 +372,8 @@ const Songs = () => {
                                                                 <Link to={`/songs/${song.id}`} className="btn-primary" style={{ padding: '6px 14px', fontSize: 12 }}>
                                                                     View Full Details
                                                                 </Link>
-                                                                {user?.role !== 'member' && (() => {
-                                                    const alreadyAdded = myLeaderProfile && song.versions?.some(v => v.song_leader_id === myLeaderProfile.id);
+                                                                {myLeaderProfile && (() => {
+                                                    const alreadyAdded = song.versions?.some(v => v.song_leader_id === myLeaderProfile.id);
                                                     const isBeingAdded = quickAddingId === song.id;
                                                     const justAdded = quickAddDoneId === song.id;
                                                     return (

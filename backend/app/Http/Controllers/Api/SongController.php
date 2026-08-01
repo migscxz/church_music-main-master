@@ -65,7 +65,7 @@ class SongController extends Controller
             \App\Models\SongVersion::create([
                 'song_id' => $song->id,
                 'song_leader_id' => $targetLeaderId,
-                'key' => $validated['original_key'] ?? 'C',
+                'key' => null,
             ]);
         }
 
