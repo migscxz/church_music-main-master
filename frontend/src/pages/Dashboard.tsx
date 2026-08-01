@@ -58,7 +58,6 @@ const Dashboard = () => {
 
     const nextService = upcomingSetlists.length > 0 ? upcomingSetlists[0] : null;
     let nextServiceDateStr = 'No upcoming service';
-    let practiceDateStr = 'N/A';
 
     if (nextService && nextService.date) {
         const d = new Date(nextService.date);
@@ -67,7 +66,6 @@ const Dashboard = () => {
         
         const p = new Date(d);
         p.setDate(p.getDate() - 1);
-        practiceDateStr = `${p.toLocaleDateString('en-US', options)} (${p.toLocaleDateString('en-US', { weekday: 'long' })})`;
     }
 
     const draftSetlistsCount = setlists.filter(s => !s.date).length;

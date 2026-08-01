@@ -144,7 +144,7 @@ const Songs = () => {
         } else {
             // If leader wants to auto-add their version, create song first, then version
             try {
-                const res = await api.post('/songs', payload);
+                await api.post('/songs', payload);
                 queryClient.invalidateQueries({ queryKey: ['songs'] });
                 setIsModalOpen(false);
                 resetForm();
